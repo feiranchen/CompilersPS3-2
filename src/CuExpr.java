@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+//*************** TO DO check related operators against figures 9************************
+
+
 public abstract class CuExpr {
 	protected String text = "";
 	protected String methodId = null;

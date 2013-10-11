@@ -234,7 +234,7 @@ class Iter extends VClass {
 		List<CuType> parents = new ArrayList<CuType>();
 		for (CuType t : arg.parentType) {
 			System.out.println(t.id);	
-			Helper.ToDo("Yiglei changed this to t, remember to change related things");
+			//Helper.ToDo("Yiglei changed this to t, remember to change related things");
 			if (!t.isTop()) parents.add(new Iter(t));
 		}
 		if (!parents.isEmpty()) super.changeParents(parents);

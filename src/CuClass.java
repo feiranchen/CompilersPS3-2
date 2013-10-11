@@ -200,8 +200,33 @@ class VBoolean extends Cls {
 		//else { throw new NoSuchTypeException();}
 		//Just one example, we also need to add other methods
 		CuTypeScheme ts;
-		ts = new TypeScheme(new ArrayList<String>(), new HashMap<String, CuType>(), CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), new LinkedHashMap<String, CuType>(), CuType.bool);
 		super.mFunctions.put("negate", ts);
+		HashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
+		arg.put("that", CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
+		super.mFunctions.put("and", ts);
+		super.mFunctions.put("or", ts);
+		super.mFunctions.put("equals", ts);
+		
+		arg = new LinkedHashMap<String, CuType>();
+		arg.put("upper", CuType.bool);
+		arg.put("includeLower", CuType.bool);
+		arg.put("includeUpper", CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), arg, new Iter(CuType.bool));
+		super.mFunctions.put("through", ts);
+		
+		arg = new LinkedHashMap<String, CuType>();
+		arg.put("inclusive", CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), arg, new Iter(CuType.bool));
+		super.mFunctions.put("onwards", ts);
+		
+		arg = new LinkedHashMap<String, CuType>();
+		arg.put("that", CuType.bool);
+		arg.put("strict", CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
+		super.mFunctions.put("lessThan", ts);
+		
 	}
     
 	public boolean calculateType() { return v; }
@@ -214,26 +239,38 @@ class VInteger extends Cls {
 		//if (val instanceof Integer) { v=val; }
 		//else { throw new NoSuchTypeException();}
 		CuTypeScheme ts;
-		ts = new TypeScheme(new ArrayList<String>(), new HashMap<String, CuType>(), CuType.integer);
+		ts = new TypeScheme(new ArrayList<String>(), new LinkedHashMap<String, CuType>(), CuType.integer);
 		super.mFunctions.put("negative", ts);
 		
-		HashMap<String, CuType> arg = new HashMap<String, CuType>();
+		HashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
 		arg.put("operator", CuType.integer);
 		ts = new TypeScheme(new ArrayList<String>(), arg, CuType.integer);
 		super.mFunctions.put("times", ts);
 		super.mFunctions.put("plus", ts);
 		super.mFunctions.put("minus", ts);
+		ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
 		super.mFunctions.put("equals", ts);
 		ts = new TypeScheme(new ArrayList<String>(), arg, new Iter(CuType.integer));
 		super.mFunctions.put("divide", ts);
-		super.mFunctions.put("modulo", ts);
+		super.mFunctions.put("modulo", ts);		
 		
-		arg = new HashMap<String, CuType>();
+		arg = new LinkedHashMap<String, CuType>();
 		arg.put("upper", CuType.integer);
 		arg.put("includeLower", CuType.bool);
 		arg.put("includeUpper", CuType.bool);
 		ts = new TypeScheme(new ArrayList<String>(), arg, new Iter(CuType.integer));
 		super.mFunctions.put("through", ts);
+		
+		arg = new LinkedHashMap<String, CuType>();
+		arg.put("inclusive", CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), arg, new Iter(CuType.integer));
+		super.mFunctions.put("onwards", ts);
+		
+		arg = new LinkedHashMap<String, CuType>();
+		arg.put("that", CuType.integer);
+		arg.put("strict", CuType.bool);
+		ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
+		super.mFunctions.put("lessThan", ts);
 	}
 	public VInteger calculateType() { return this; }
 }
@@ -244,6 +281,14 @@ class VCharacter extends Cls {
 		super("Character", new ArrayList<String>(), new LinkedHashMap<String, CuType>());
 		//if (val instanceof Character) { c=val; }
 		//else { throw new NoSuchTypeException();}
+		CuTypeScheme ts;
+		ts = new TypeScheme(new ArrayList<String>(), new LinkedHashMap<String, CuType>(), CuType.integer);
+		super.mFunctions.put("unicode", ts);
+		
+		HashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
+		arg.put("that", CuType.character);
+		ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
+		super.mFunctions.put("equals", ts);
 	}
 	public VCharacter calculateType() { return this; }
 }
@@ -252,8 +297,13 @@ class VString extends Cls {
 	String v="";
 	public VString() {
 		super("String", new ArrayList<String>(), new LinkedHashMap<String, CuType>());
+		this.addSuper(new Iter(CuType.character));
 		//if (val instanceof String) { v=val; }
 		//else { throw new NoSuchTypeException();}
+		HashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
+		arg.put("that", CuType.string);
+		CuTypeScheme ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
+		super.mFunctions.put("equals", ts);
 	}
 
 	public VString calculateType() { return this; }
@@ -266,7 +316,6 @@ class VIterable extends Cls {
 		super("Iterable", kc, new LinkedHashMap<String, CuType>());
 		//if (val instanceof List<CuType>) { v=val; }
 		//else { throw new NoSuchTypeException();}
-		this.addSuper(new Iter(CuType.character));
 	}
 	public VIterable calculateType() { return this; }
 }

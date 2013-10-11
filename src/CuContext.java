@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -99,20 +100,18 @@ public class CuContext {
 		//CuFun chararcterFun= new Function(new Vv("character"),
 		//public TypeScheme(List<String> kc, Map<String, CuType> tc , CuType t){
 		//VClass(String s, List<CuType> pt, Boolean intf)
-		
-		TypeScheme chararcterFunTemp = new TypeScheme(new ArrayList<String>(),
-				new HashMap<String,CuType>(){{put("unicode",CuType.integer);}}, 
-				CuType.character); 
+		HashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
+		arg.put("unicode",CuType.integer);
+		TypeScheme chararcterFunTemp = new TypeScheme(new ArrayList<String>(), arg, CuType.character); 
 		mFunctions.put("character", chararcterFunTemp);
 		//string
-		TypeScheme stringFunTemp = new TypeScheme(new ArrayList<String>(),
-				new HashMap<String,CuType>(){{put("characters",
-						CuType.iterable(new ArrayList<CuType>(){{add(CuType.character);}}));}}, 
-				CuType.string); 
+		arg = new LinkedHashMap<String, CuType>();
+		arg.put("characters",new Iter(CuType.character));
+		TypeScheme stringFunTemp = new TypeScheme(new ArrayList<String>(), arg, CuType.string); 
 		mFunctions.put("string", stringFunTemp);
 		
 		//=====Type init===========
-		mVariables.put("input",CuType.iterable(new ArrayList<CuType>(){{add(CuType.integer);}}));
+		mVariables.put("input",CuType.iterable(new ArrayList<CuType>(){{add(CuType.string);}}));
 	}
 }
 
