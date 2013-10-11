@@ -1,0 +1,59 @@
+#!/bin/bash
+ 
+# Copyright (C) 2010-2011 Thiago Bellini <hackedbellini@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+# Check for necessary arguments
+echo "test cases!"
+
+if [ $# -eq 0 ]; then
+    echo "No files selected."
+    exit 1
+else
+    if ! [ -x $1 ]; then
+        echo "File not executable. Try running:"
+        echo "chmod +x $1"
+        exit 1
+    fi
+fi
+ 
+# Find .in files recursively. Loop through them, executing them, and printing
+# the time token and, if the same file with .out extension is found on the
+# same path, it'll print if the algorithm is running OK or not. If not, it will
+# print the diff too.
+# The program that will be used to execute all .in files is the one provided as
+# the first argument when executing this. The search path is the working path,
+# recursively. That means, the directory you are 'cd' in, not the one that this
+# script or the executable program are.
+for IN in `find \`dirname $1\`| grep '\.in' | sed 's/ /\\ /g' | sort`; do
+    OUT=`echo $IN | sed 's/in$/out/'`
+    MYOUT=`echo $OUT | sed 's/out$/my.out/'`
+    TIME=`(time ./$1 < $IN > $MYOUT) 2>&1 | grep real | sed 's/real //'`
+ 
+    echo "**** `echo $IN | sed 's/^[0-9a-zA-Z\/.]*\/\([0-9a-zA-Z._-]*\).in$/\1/'` ****"
+    echo "Time: $TIME"
+    if [ -f $OUT ]; then
+            DIFF=`diff $OUT $MYOUT`
+            if [ -z "$DIFF" ]; then
+                echo "Exit: OK!"
+                echo $MYOUT
+            else
+                echo "Exit: Bad! -> Diff:"
+                diff $OUT $MYOUT
+            fi
+    fi
+    echo "============================================================"
+done
+exit 0
