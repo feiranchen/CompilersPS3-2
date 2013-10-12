@@ -83,6 +83,9 @@ class FunPrg extends CuProgr {
 		System.out.println(this.statement.toString());
 		//update the function context
 		context.mergeVariable();
+		if (context.mFunctions.containsKey(this.name)) {
+			throw new NoSuchTypeException();
+		}
 		context.updateFunction(this.name, this.typeScheme);
 		//type check typeschemes and statements
 		this.typeScheme.calculateType(context);
