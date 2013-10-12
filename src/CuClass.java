@@ -58,8 +58,11 @@ class Cls extends CuClass {
 	}
 	
 	@Override public CuClass calculateType(CuContext context) throws NoSuchTypeException { 
+		//we don't want to modify context
+		CuContext cur_context = new CuContext(context);
+		cur_context.mKind = super.kindCtxt;
 		//we need to type check tau 
-		CuType tau_hat = super.superType.calculateType(context);
+		CuType tau_hat = super.superType.calculateType(cur_context);
 		
 		if (!(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
 			throw new NoSuchTypeException();
@@ -69,7 +72,7 @@ class Cls extends CuClass {
 		funList_cpy.putAll(funList);
 		
 		if (superType instanceof VClass){
-			Map<String, CuFun> superfunLst = context.mClasses.get(superType.id).funList;
+			Map<String, CuFun> superfunLst = cur_context.mClasses.get(superType.id).funList;
 			for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 				//check signature if already exists
 				if (funList.containsKey(e.getKey())){
@@ -77,7 +80,8 @@ class Cls extends CuClass {
 					//e.getValue().ts.calculateType(context);
 					//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
 					//check whether the 
-					if (!e.getValue().ts.sameAs(e.getValue().ts)){
+					////I don't think we should check here because you can not check two tyscheme equivalence with generic parames
+					if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
 						throw new NoSuchTypeException();
 					}
 					if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
@@ -93,7 +97,7 @@ class Cls extends CuClass {
 		else {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
 			for (CuType t:superType.parentType){
-				Map<String, CuFun> superfunLst= context.mClasses.get(t.id).funList;
+				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 					//check signature if already exists
 					if (funList.containsKey(e.getKey())){
@@ -101,7 +105,8 @@ class Cls extends CuClass {
 						//e.getValue().ts.calculateType(context);
 						//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
 						//check whether the 
-						if (!e.getValue().ts.sameAs(e.getValue().ts)){
+						//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
+						if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
 							throw new NoSuchTypeException();
 						}
 						//use the first method implementation
@@ -117,17 +122,18 @@ class Cls extends CuClass {
 		}
 		
 		//here, we check all the function names, they should not appear in context's mfunctions
-		if (context.mFunctions.containsKey(super.name)) {
+		if (cur_context.mFunctions.containsKey(super.name)) {
 			throw new NoSuchTypeException();
 		}
 		
 		for (String method_name : super.mFunctions.keySet()) {
-			if (context.mFunctions.containsKey(method_name)) {
+			if (cur_context.mFunctions.containsKey(method_name)) {
 				throw new NoSuchTypeException();
 			}
 		}
 		
 		context.updateClass(name, this);
+		cur_context.updateClass(name, this);
 		//also need to update the function context, delta prime in figure 10
 		List<CuType> cur_types = new ArrayList<CuType>();
 		for (String str : super.kindCtxt) {
@@ -135,12 +141,10 @@ class Cls extends CuClass {
 		}
 		CuTypeScheme temp_ts = new TypeScheme(super.kindCtxt, this.fieldTypes , new VClass(super.name, cur_types));
 		context.updateFunction(super.name, temp_ts);
+		cur_context.updateFunction(super.name, temp_ts);
 
 			
 		//now type check each typescheme
-		//we don't want to modify context
-		CuContext cur_context = new CuContext(context);
-		cur_context.mKind = super.kindCtxt;
 		for (CuFun iter : funList_cpy.values()) {
 			iter.ts.calculateType(cur_context);
 		}
@@ -237,8 +241,11 @@ class Intf extends CuClass{
 	}
 	
 	@Override public CuClass calculateType(CuContext context) throws NoSuchTypeException { 
+		//we don't want to modify context
+		CuContext cur_context = new CuContext(context);
+		cur_context.mKind = super.kindCtxt;
 		//we need to type check tau 
-		CuType tau_hat = super.superType.calculateType(context);
+		CuType tau_hat = super.superType.calculateType(cur_context);
 		if (!tau_hat.id.equals(CuVvc.TOP)) {
 			throw new NoSuchTypeException();
 		}
@@ -251,15 +258,15 @@ class Intf extends CuClass{
 		funList_cpy.putAll(funList);
 		
 		if (superType instanceof VClass){
-			Map<String, CuFun> superfunLst = context.mClasses.get(superType.id).funList;
+			Map<String, CuFun> superfunLst = cur_context.mClasses.get(superType.id).funList;
 			for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 				//check signature if already exists
 				if (funList.containsKey(e.getKey())){
 					//check signature, but not here
 					//e.getValue().ts.calculateType(context);
 					//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
-					//check whether the 
-					if (!e.getValue().ts.sameAs(e.getValue().ts)){
+					//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
+					if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
 						throw new NoSuchTypeException();
 					}
 					//if this method doesn't have an implementation, but super interface has an implementation,
@@ -277,7 +284,7 @@ class Intf extends CuClass{
 		else {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
 			for (CuType t:superType.parentType){
-				Map<String, CuFun> superfunLst= context.mClasses.get(t.id).funList;
+				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 					//check signature if already exists
 					if (funList.containsKey(e.getKey())){
@@ -285,7 +292,8 @@ class Intf extends CuClass{
 						//e.getValue().ts.calculateType(context);
 						//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
 						//check whether the 
-						if (!e.getValue().ts.sameAs(e.getValue().ts)){
+						//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
+						if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context )){
 							throw new NoSuchTypeException();
 						}
 						//use the first implementation of inherited interfaces
@@ -302,17 +310,15 @@ class Intf extends CuClass{
 		
 		//here, we check all the function names, they should not appear in context's mfunctions		
 		for (String method_name : super.mFunctions.keySet()) {
-			if (context.mFunctions.containsKey(method_name)) {
+			if (cur_context.mFunctions.containsKey(method_name)) {
 				throw new NoSuchTypeException();
 			}
 		}
 		
 		context.updateClass(name, this);
+		cur_context.updateClass(name, this);
 			
 		//now type check each typescheme
-		//we don't want to modify context
-		CuContext cur_context = new CuContext(context);
-		cur_context.mKind = super.kindCtxt;
 		for (CuFun iter : funList_cpy.values()) {
 			iter.ts.calculateType(cur_context);
 		}

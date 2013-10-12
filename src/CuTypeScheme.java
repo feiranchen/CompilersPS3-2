@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +13,7 @@ public abstract class CuTypeScheme {
 		return text;
 	}
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
-	public boolean sameAs (CuTypeScheme that) {
+	public boolean sameAs (CuTypeScheme that, CuContext context) {
 		return false;}
 }
 
@@ -33,8 +35,29 @@ class TypeScheme extends CuTypeScheme {
 		super.data_t.calculateType(temp_context);
 	}
 	
-	public boolean sameAs (CuTypeScheme that) {
-		Helper.ToDo("to be implemented");
-		return false;
+	public boolean sameAs (CuTypeScheme that, CuContext context) {
+		if (super.data_tc.size() != that.data_tc.size()) {
+			return false;
+		}
+		CuContext original_context = new CuContext(context);
+		context.mKind.addAll(data_kc);
+		//tc is a LinkedHashMap
+		ArrayList<CuType> this_types = (ArrayList<CuType>) super.data_tc.values();
+		ArrayList<CuType> that_types = (ArrayList<CuType>) super.data_tc.values();
+		for (int i=0; i<this_types.size(); i++) {
+			if (!this_types.get(i).equals(that_types.get(i))) {
+				//restore original context
+				context = original_context;
+				return false;
+			}
+		}
+		if (!super.data_t.equals(that.data_t)) {
+			//restore original context
+			context = original_context;
+			return false;
+		}
+		//restore original context
+		context = original_context;
+		return true;
 	}
 }
