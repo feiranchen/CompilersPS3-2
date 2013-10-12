@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.*;
 
 
 public class Helper {
@@ -45,5 +46,13 @@ public class Helper {
 	}
 	/* thoughts coming, to implement later on */
 	protected static void ToDo(String comment){
+	}
+	
+	protected static CuType getTypeForIterable(String s){
+		Pattern p = Pattern.compile("[^ ]*< ?([^ ]*)");		//Iterable  < Integer  < >  >
+		Matcher m = p.matcher(s);
+		m.find();
+		CuType type = new VClass(m.group(1), new ArrayList<CuType>());
+		return type;
 	}
 }

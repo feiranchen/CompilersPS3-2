@@ -77,6 +77,8 @@ public abstract class CuType {
 				}
 			}
 		}
+		if (n.id.equals("String"))
+			p.add(new Iter(character));
 		if (!p.contains(top)) p.add(top);
 		return p;
 	}
@@ -98,8 +100,10 @@ class VClass extends CuType {
 	@Override public CuType calculateType(CuContext context) {
 		// type in argument must be type parameter, mapped args must be in scope
 		for (Entry<CuType, CuType> m: map.entrySet()) {
-			if (!m.getKey().isTypePara() || context.getVariable(m.getValue().id) == null) 
-				throw new NoSuchTypeException(); 
+			if (!m.getKey().isTypePara() || !context.getKindList().contains(m.getKey().id)) 
+				if (!m.getValue().isBottom() && !context.mVariables.containsKey(m.getValue())) {
+					throw new NoSuchTypeException(); 
+				}	
 		}
 		// check if class or interface
 		CuClass c = context.mClasses.get(id);
@@ -134,7 +138,8 @@ class VClass extends CuType {
 	//TODO: change this method
 	@Override public boolean isClassOrInterface() {return true;}
 	@Override public boolean isSubtypeOf(CuType that) {
-		if (this.equalsInstance(that)) return true;
+		if (this.equals(that)) return true;
+		if (this.isBottom()) return true;
 		for (CuType p : this.parentType) {
 			if (this.isClassOrInterface() && p.isClassOrInterface()) {
 				p.plugIn(((VClass) this).map);
@@ -156,11 +161,14 @@ class VClass extends CuType {
 		return equals(t) && map.equals(((VClass)t).map); // for generic plug in
 	}
 	//added by Yinglei
-	@Override public boolean isIterable() {return super.id == "Iterable";}
-	@Override public boolean isString() {return super.id == "String";}
-	@Override public boolean isCharacter() {return super.id == "Character";}
-	@Override public boolean isInteger() {return super.id == "Integer";}
-	@Override public boolean isBoolean() {return super.id == "Boolean";}
+	@Override public boolean isIterable() {return super.id.equals("Iterable");}
+	@Override public boolean isString() {return super.id.equals("String");}
+	@Override public boolean isCharacter() {return super.id.equals("Character");}
+	@Override public boolean isInteger() {return super.id.equals("Integer");}
+	@Override public boolean isBoolean() {return super.id.equals("Boolean");}
+	@Override public CuType getArgument() throws NoSuchTypeException {
+		return type;
+	}
 }
 
 

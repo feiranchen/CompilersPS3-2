@@ -106,7 +106,7 @@ class AppExpr extends CuExpr {
 		super.text = e1.toString() + " ++ " + e2.toString();
 	}
 	@Override protected CuType calculateType(CuContext context) {
-		CuType type = CuType.commonParent(left.getType(context), left.getType(context));
+		CuType type = CuType.commonParent(left.getType(context), right.getType(context));
 		if (type.isIterable()) return type;
 		if (type.isBottom()) return new Iter(CuType.bottom);
 		Helper.ToDo("Bottom <: Iterable<Bot>?");
@@ -121,7 +121,7 @@ class BrkExpr extends CuExpr {
 		super.text=Helper.printList("[", val, "]", ",");
 	}
 	@Override protected CuType calculateType(CuContext context) {
-		Helper.ToDo("what if es is empty or null");
+		if (val == null || val.isEmpty()) return new Iter(CuType.bottom);
 		CuType t = val.get(0).getType(context);
 		for (int i = 0; i+1 < val.size(); i++) {
 			t = CuType.commonParent(val.get(i).getType(context), val.get(i+1).getType(context));
@@ -479,7 +479,8 @@ class VvExp extends CuExpr{
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType cur_type : cur_ts.data_tc.values()) {
-        	System.out.println(cur_type.id);
+        	if(cur_type.id.equals("Iterable"))
+        		cur_type.type = Helper.getTypeForIterable(cur_type.text);
             tList.add(cur_type);
         }
         for (int i = 0; i < es.size(); i++) {

@@ -67,7 +67,8 @@ class ForStat extends CuStat{
 		tcontext.mergeVariable();		
     	//check whether e is an iterable of tao
     	CuType eType = e.calculateType(tcontext);
-    	if (!eType.isIterable() ) {
+ 		Boolean flag = eType.isIterable();
+    	if (flag != true) {
     		throw new NoSuchTypeException();
     	}
     	//var can't appear in mutable or immutable variables
