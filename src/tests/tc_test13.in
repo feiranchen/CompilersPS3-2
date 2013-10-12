@@ -18,7 +18,7 @@ class Cons<T>(elem : T,rest : Iterable<Cons<T>> )
 		nrest := [list];
 		for(r in rest)
 		{
-			nrest := r.append(list);
+			nrest := [r.append(list)];
 		}
 		return Cons<T>(elem,nrest);
 	}
@@ -38,9 +38,19 @@ fun strToCons<T>(iter : Iterable<T>) : Iterable<Cons<T>>
 	ret := [];
 	for(c in iter)
 	{
-		ret := Cons<T>(c,ret);
+		ret := [Cons<T>(c,ret)];
 	}
-	return ret.reverse();
+	for(r in ret)
+	{
+	    return [r.reverse()];
+	}
+	return [];
 }
 
-return [string(strToCons<Character>("Hello World!").getIterable())];
+hw := strToCons<Character>("Hello World!");
+ret := "";
+for(c in hw)
+{
+	ret:=string(c.getIterable());
+}
+return [ret];
