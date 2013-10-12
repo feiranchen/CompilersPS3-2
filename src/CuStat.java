@@ -176,7 +176,9 @@ class Stats extends CuStat{
 		for (CuStat cs : al) {
 			System.out.println(cs.toString());
 			HReturn temp = cs.calculateType(context);
-			re.b = temp.b;
+			if (temp.b==true) {
+				re.b = true;
+			}
 			System.out.println("finished " + cs.toString() + "before common parrent");
 			System.out.println("re tau is " + re.tau.id + ", temp tau is " + temp.tau.id);
 			re.tau = CuType.commonParent(re.tau, temp.tau);

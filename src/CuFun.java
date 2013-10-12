@@ -6,7 +6,7 @@ import java.util.Map;
 public abstract class CuFun {
 	public String v;
 	public CuTypeScheme ts;
-	public CuStat funBody = new Stats(new ArrayList<CuStat>());
+	public CuStat funBody = null; //new Stats(new ArrayList<CuStat>());
 	//public void add(CuVvc v, CuTypeScheme ts) {}
 	//public void add(CuVvc v, CuTypeScheme ts, CuStat s) {}
 	//public void add(CuStat s){}

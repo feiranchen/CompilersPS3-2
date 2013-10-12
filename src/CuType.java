@@ -105,7 +105,7 @@ class VClass extends CuType {
 		CuClass c = context.mClasses.get(id);
 		if (c == null) throw new NoSuchTypeException(); 
 		if (c.isInterface()) return CuType.top;
-		else return this;
+		return this;
 	}
 	/* instantiate this class, strict plug in */
 	@Override public Map<CuType, CuType> plugIn(List<CuType> t) {
@@ -181,12 +181,14 @@ class VTypeInter extends CuType {
 		for(int i = 0; i < parents.size(); i++) {
 			CuType t = parents.get(i);
 			// A & B & C..., only the first could be a class
+			//Yinglei asks: why do we have this checking?
 			if ((i > 0) && !t.calculateType(context).isTop()) throw new NoSuchTypeException();
 			// all parents are distinct except top
 			List<CuType> temp = t.parentType;
 			temp.remove(CuType.top);
 			if(!pAll.addAll(temp)) throw new NoSuchTypeException();
 			// all method names are distinct
+			Helper.ToDo("Please check the addAll method, if there are existing keys, will it return false?");
 			Set<String> temp2 = context.mClasses.get(t.id).mFunctions.keySet();
 			if(!vAll.addAll(temp2)) throw new NoSuchTypeException();
 		}

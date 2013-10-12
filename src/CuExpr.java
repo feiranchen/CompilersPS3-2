@@ -19,7 +19,7 @@ public abstract class CuExpr {
 		Helper.ToDo("function context should contains Integer->method list");
 		return type;
 	}
-	protected abstract CuType calculateType(CuContext context);
+	protected CuType calculateType(CuContext context) throws NoSuchTypeException { return null;};
 	@Override public String toString() {return text;}
 	
 	protected CuType binaryExprType(CuContext context, String leftId, String methodId, CuType rightType) throws NoSuchTypeException {

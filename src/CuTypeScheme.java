@@ -11,6 +11,8 @@ public abstract class CuTypeScheme {
 		return text;
 	}
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
+	public boolean sameAs (CuTypeScheme that) {
+		return false;}
 }
 
 class TypeScheme extends CuTypeScheme {
@@ -20,6 +22,7 @@ class TypeScheme extends CuTypeScheme {
 		super.data_t=t;
 		super.text=Helper.printList("<", data_kc, ">", ",")+" "+Helper.printMap("(", data_tc, ")", ",")+" : "+t.toString();
 	}
+	
 	@Override public void calculateType(CuContext context) throws NoSuchTypeException {
 		CuContext temp_context = new CuContext(context);
 		temp_context.updateKc(super.data_kc);
@@ -28,5 +31,10 @@ class TypeScheme extends CuTypeScheme {
 			value.calculateType(temp_context);
 		}
 		super.data_t.calculateType(temp_context);
+	}
+	
+	public boolean sameAs (CuTypeScheme that) {
+		Helper.ToDo("to be implemented");
+		return false;
 	}
 }
