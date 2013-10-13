@@ -50,7 +50,7 @@ public class Helper {
 	
 	protected static CuType getTypeForIterable(String s){
 		CuType type;
-		Pattern p = Pattern.compile("[^ ]*< ?([A-Za-z0-9]*)");		//Iterable  < Integer  < >  >
+		Pattern p = Pattern.compile("[A-Za-z ]*< ?([A-Za-z0-9]*)");		//Iterable  < Integer  < >  >
 		Matcher m = p.matcher(s);
 		m.find();
 		//System.out.println(m.group(1));

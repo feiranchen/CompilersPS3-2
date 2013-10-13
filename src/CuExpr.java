@@ -76,7 +76,7 @@ public abstract class CuExpr {
     protected Boolean isTypeOf(CuContext context, CuType t, List<CuType> map) {
         CuType type = this.getType(context);
 Helper.P("isTypeOf ");
-        type.plugIn(map);
+//type.plugIn(map);
 Helper.P("isTypeOf"+map.toString());
         return type.isSubtypeOf(t);
     }
