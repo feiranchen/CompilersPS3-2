@@ -64,7 +64,7 @@ class Cls extends CuClass {
 		//we need to type check tau 
 		CuType tau_hat = super.superType.calculateType(cur_context);
 		
-		if (!(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
+		if (!(superType instanceof Top) && !(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
 			throw new NoSuchTypeException();
 		}
 		//make a copy of current function list, because we only need to type check these functions
@@ -94,7 +94,7 @@ class Cls extends CuClass {
 				}
 			}
 		}
-		else {
+		else if (superType instanceof VTypeInter) {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
 			for (CuType t:superType.parentType){
 				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
@@ -250,7 +250,7 @@ class Intf extends CuClass{
 			throw new NoSuchTypeException();
 		}
 		
-		if (!(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
+		if (!(superType instanceof Top) && !(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
 			throw new NoSuchTypeException();
 		}
 		//make a copy of current function list, because we only need to type check these functions
@@ -281,7 +281,7 @@ class Intf extends CuClass{
 				}
 			}
 		}
-		else {
+		else if (superType instanceof VTypeInter) {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
 			for (CuType t:superType.parentType){
 				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;

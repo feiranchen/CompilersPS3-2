@@ -177,6 +177,8 @@ class VTypeInter extends CuType {
 	public VTypeInter(CuType t1){
 		parents.add(t1);
 		super.text=t1.toString();
+		Helper.ToDo("Yinglei added the following line, please check");
+		super.parentType = parents;
 	}
 	@Override public void add(CuType t) {
 		parents.add(t);
