@@ -100,6 +100,8 @@ class VClass extends CuType {
 		for (CuType t : args) {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
+		if (s.equals("String"))
+			parentType.add(character);
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
 		//add by Yinglei to fix a bug in test12
 		if (super.id.equals("Iterable") && args != null && !(args.size()==0)) {
@@ -182,7 +184,7 @@ class VClass extends CuType {
 		return equals(t) && map.equals(((VClass)t).map); // for generic plug in
 	}
 	//added by Yinglei
-	@Override public boolean isIterable() {return super.id.equals("Iterable");}
+	@Override public boolean isIterable() {return (super.id.equals("Iterable") || super.id.equals("String"));}
 	@Override public boolean isString() {return super.id.equals("String");}
 	@Override public boolean isCharacter() {return super.id.equals("Character");}
 	@Override public boolean isInteger() {return super.id.equals("Integer");}
@@ -261,19 +263,19 @@ class VTypePara extends CuType {
 class Iter extends VClass {
 	public Iter(CuType arg) {
 		super(CuVvc.ITERABLE, new ArrayList<CuType> ()); // id is "Iterable"
-		System.out.println("in iter begin");
+		//System.out.println("in iter begin");
 		super.type = arg;
 		super.text=super.id+ " <" + arg.toString()+">";
 		// set its parent types
 		List<CuType> parents = new ArrayList<CuType>();
 		for (CuType t : arg.parentType) {
-			System.out.println(t.id);	
+			//System.out.println(t.id);	
 			//Helper.ToDo("Yiglei changed this to t, remember to change related things");
 			if (!t.isTop()) parents.add(new Iter(t));
 		}
 		if (!parents.isEmpty()) super.changeParents(parents);
 		Helper.ToDo("type check Iterable?");
-		System.out.println("in iter end");
+		//System.out.println("in iter end");
 	}
 	@Override public boolean isIterable() {return true;}
 	@Override public boolean equals(CuType that) {
@@ -316,6 +318,7 @@ class Top extends CuType{
 	Top() {
 		super.id = CuVvc.TOP;
 		super.text = "Thing";
+		super.type =  new Bottom();
 	}
 	@Override public CuType calculateType(CuContext context) { return this;}
 	@Override public boolean isTop() {return true;}
