@@ -22,6 +22,8 @@ class TypeScheme extends CuTypeScheme {
 		super.data_kc=kc;
 		super.data_tc=tc;
 		super.data_t=t;
+		if(super.data_t.id.equals("Iterable"))
+			super.data_t.type = Helper.getTypeForIterable(super.data_t.text);
 		super.text=Helper.printList("<", data_kc, ">", ",")+" "+Helper.printMap("(", data_tc, ")", ",")+" : "+t.toString();
 	}
 	

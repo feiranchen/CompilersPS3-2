@@ -55,6 +55,10 @@ public abstract class CuType {
 	public static CuType commonParent(CuType t1, CuType t2) {
 		if (t1 == null || t1.isBottom()) return t2;
 		if (t2 == null || t2.isBottom() ) return t1;
+		if(t1.isIterable() && t2.isIterable())
+		{
+			return new Iter(CuType.commonParent(t1.type, t2.type));
+		}
 		List<CuType> parent1 = superTypeList(t1);
 		List<CuType> parent2 = superTypeList(t2);
 		for (CuType p : parent1) {
@@ -140,11 +144,23 @@ class VClass extends CuType {
 	@Override public boolean isSubtypeOf(CuType that) {
 		if (this.equals(that)) return true;
 		if (this.isBottom()) return true;
-		for (CuType p : this.parentType) {
-			if (this.isClassOrInterface() && p.isClassOrInterface()) {
-				p.plugIn(((VClass) this).map);
+		if (this.isIterable() && that.isIterable())
+		{
+			for (CuType p : this.type.parentType) {
+				if (this.type.isClassOrInterface() && p.type.isClassOrInterface()) {
+					p.type.plugIn(((VClass) this.type).map);
+				}
+				if (p.type.isSubtypeOf(that.type) || p.type.equals(that.type)) return true;
 			}
-			if (p.isSubtypeOf(that)) return true;
+		}
+		else
+		{
+			for (CuType p : this.parentType) {
+				if (this.isClassOrInterface() && p.isClassOrInterface()) {
+					p.plugIn(((VClass) this).map);
+				}	
+				if (p.isSubtypeOf(that) || p.equals(that)) return true;
+			}
 		}
 		return false;
 	}
@@ -298,6 +314,7 @@ class Top extends CuType{
 	@Override public CuType calculateType(CuContext context) { return this;}
 	@Override public boolean isTop() {return true;}
 	@Override public boolean equals(CuType that) { return that.isTop();}
+	@Override public boolean isSubtypeOf(CuType t) { System.out.println("in class Top"); return false;}
 }
 class Bottom extends CuType {
 	public Bottom(){
