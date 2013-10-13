@@ -71,6 +71,7 @@ class ForStat extends CuStat{
     	if (flag != true) {
     		throw new NoSuchTypeException();
     	}
+    	eType.type = Helper.getTypeForIterable(eType.toString());
     	//var can't appear in mutable or immutable variables
     	if (context.inMutVar(this.var.toString()) || context.inVar(this.var.toString())) {
     		throw new NoSuchTypeException();
