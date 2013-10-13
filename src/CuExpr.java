@@ -121,13 +121,15 @@ class BrkExpr extends CuExpr {
 		super.text=Helper.printList("[", val, "]", ",");
 	}
 	@Override protected CuType calculateType(CuContext context) {
+		System.out.println("in bracket expression, start");
 		if (val == null || val.isEmpty()) return new Iter(CuType.bottom);
 		CuType t = val.get(0).getType(context);
+		System.out.println("type id is " + t.id);
 		for (int i = 0; i+1 < val.size(); i++) {
 			t = CuType.commonParent(val.get(i).getType(context), val.get(i+1).getType(context));
 		} // find the common parent type of all expressions here
 		
-		System.out.println("in bracket expression now");
+		System.out.println("in bracket expression end");
 		
 		return new Iter(t);
 	}
@@ -400,7 +402,7 @@ class VarExpr extends CuExpr{
 	private String method;
 	private List<CuType> types;
 	List<CuExpr> es;
-	public VarExpr(CuExpr e, String var, List<CuType> pt, List<CuExpr> es) {
+	public VarExpr(CuExpr e, String var, List<CuType> pt, List<CuExpr> es) {		
 		this.val = e;
 		this.method = var;
 		this.types = pt;
@@ -409,7 +411,9 @@ class VarExpr extends CuExpr{
 				Helper.printList("<", this.types, ">", ","), Helper.printList("(", this.es, ")", ","));
 	}
 	@Override protected CuType calculateType(CuContext context) {
+		System.out.println("in VarExp, begin");
         CuType tHat = val.getType(context); // 1st line in Figure 5 exp
+        System.out.println("t_hat is " + tHat.id);
         CuTypeScheme ts = context.mClasses.get(tHat.id).mFunctions.get(method);
         List<CuType> tList = new ArrayList<CuType>();
         for (String s : ts.data_kc) {
@@ -419,6 +423,7 @@ class VarExpr extends CuExpr{
             if (!es.get(i).isTypeOf(context, tList.get(i), types))
                 throw new NoSuchTypeException();
         }   
+        System.out.println("in VarExp, end");
         return ts.data_t;
 	}
 
@@ -428,13 +433,17 @@ class VcExp extends CuExpr {
 	private List<CuType> types;
 	private List<CuExpr> es;
 	public VcExp(String v, List<CuType> pt, List<CuExpr> e){
+		System.out.println("in VcExp constructor, begin");
+		
 		this.val=v;
 		this.types=pt;
 		this.es=e;
 		
 		super.text=val.toString()+Helper.printList("<", types, ">", ",")+Helper.printList("(", es, ")", ",");
+		System.out.println("in VcExp constructor, end");
 	}
 	@Override protected CuType calculateType(CuContext context)  throws NoSuchTypeException{
+		System.out.println("in VcExp, begin");
         // check tao in scope
         if (context.getFunction(val) == null) throw new NoSuchTypeException();
         // check each es 
@@ -447,6 +456,7 @@ class VcExp extends CuExpr {
             if (!es.get(i).isTypeOf(context, tList.get(i), types))
                 throw new NoSuchTypeException();
         }
+        System.out.println("in VcExp, end");
         return cur_ts.data_t;
 	}
 }
