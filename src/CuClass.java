@@ -57,6 +57,10 @@ class Cls extends CuClass {
 		super.mFunctions.put(v, ts);
 	}
 	
+	@Override public void add(List<CuExpr> s) {
+		this.superArg = s;
+	}
+	
 	@Override public CuClass calculateType(CuContext context) throws NoSuchTypeException { 
 		//we don't want to modify context
 		CuContext cur_context = new CuContext(context);
@@ -204,13 +208,15 @@ class Cls extends CuClass {
 	}
 	
 
-	/*
+	
 	@Override public String toString() {
-		return String.format("class %s %s %s extends %s { %s super ( %s ) ; %s }", 
-				clsintf, Helper.printList("<", kc, ">", ","), Helper.printMap("(", tc, ")", ","), superType.toString(), 
-				Helper.printList("", classStatement, "", ""), Helper.printList("(", es, ")", ","), Helper.printList("", fun, "", ""));
+		/*return String.format("class %s %s %s extends %s { %s super ( %s ) ; %s }", 
+				super.name, Helper.printList("<", super.kindCtxt, ">", ","), Helper.printMap("(", this.fieldTypes, ")", ","), superType.toString(), 
+				Helper.printList("", classStatement, "", ""), Helper.printList("(", this.superArg, ")", ","), Helper.printList("", fun, "", ""));
+	    */
+		return "to string messed up";
 	}
-	*/
+
 	
 }
 
@@ -357,6 +363,14 @@ class Intf extends CuClass{
 	}
 	
 	@Override public boolean isInterface() {return true; }
+	
+	@Override public String toString() {
+		/*return String.format("class %s %s %s extends %s { %s super ( %s ) ; %s }", 
+				super.name, Helper.printList("<", super.kindCtxt, ">", ","), Helper.printMap("(", this.fieldTypes, ")", ","), superType.toString(), 
+				Helper.printList("", classStatement, "", ""), Helper.printList("(", this.superArg, ")", ","), Helper.printList("", fun, "", ""));
+	    */
+		return "to string messed up";
+	}
 }
 
 

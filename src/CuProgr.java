@@ -47,6 +47,7 @@ class ClassPrg extends CuProgr {
 		System.out.println("in class program constructor");
 		this.c = c;
 		super.text = c.toString();
+		System.out.println("exit class program constructor");
 	}
 	@Override public void calculateType(CuContext context) throws NoSuchTypeException {
 		//Yinglei's guess it that depends on its detailed type (class/interface),
