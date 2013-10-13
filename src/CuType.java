@@ -37,7 +37,8 @@ public abstract class CuType {
 
 	public void add(CuType t) {}
 	public CuType getArgument() throws NoSuchTypeException {
-		throw new NoSuchTypeException();
+		//throw new NoSuchTypeException();
+		return this.type;
 	}
 	public Map<CuType, CuType> plugIn(List<CuType> t) { return map;}
 	public Map<CuType, CuType> plugIn(Map<CuType, CuType> t) {return map;}
@@ -100,6 +101,10 @@ class VClass extends CuType {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
+		//add by Yinglei to fix a bug in test12
+		if (super.id.equals("Iterable") && args != null && !(args.size()==0)) {
+			super.type = args.get(0);
+		}
 	}
 	@Override public CuType calculateType(CuContext context) {
 		// type in argument must be type parameter, mapped args must be in scope
@@ -236,6 +241,7 @@ class VTypeInter extends CuType {
 
 class VTypePara extends CuType {
 	public VTypePara(String s){
+		System.out.println( "in VTypePara, id is " + s);
 		super.id = s;
 		super.text = s;
 	}

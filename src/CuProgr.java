@@ -55,6 +55,7 @@ class ClassPrg extends CuProgr {
 		System.out.println("in class program");
 		context.mergeVariable();
 		c.calculateType(context);
+		System.out.println("in class program, end");
 	}
 }
 

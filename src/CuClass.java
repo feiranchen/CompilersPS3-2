@@ -193,9 +193,12 @@ class Cls extends CuClass {
 			temp.mKind.addAll(ts.data_kc);
 			temp.mMutVariables = ts.data_tc;
 			HReturn re = iter.funBody.calculateType(temp);
+			System.out.println("b is " + re.b + re.tau.toString() + "data_t is " + ts.data_t.toString());
 			if (re.b == false || !re.tau.isSubtypeOf(ts.data_t)) {
+				System.out.println("return type doesn't match, b is " + re.b + re.tau.toString());
 				throw new NoSuchTypeException();
 			}
+			System.out.println("succeed " + iter.toString());
 		}
 		
 		//check every function has an implemention

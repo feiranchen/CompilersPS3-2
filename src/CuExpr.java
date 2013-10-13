@@ -415,14 +415,22 @@ class VarExpr extends CuExpr{
         CuType tHat = val.getType(context); // 1st line in Figure 5 exp
         System.out.println("t_hat is " + tHat.id);
         CuTypeScheme ts = context.mClasses.get(tHat.id).mFunctions.get(method);
+        System.out.println("got this function");
         List<CuType> tList = new ArrayList<CuType>();
-        for (String s : ts.data_kc) {
+        /*for (String s : ts.data_kc) {
             tList.add(ts.data_tc.get(s));
         }   
         for (int i = 0; i < es.size(); i++) {
             if (!es.get(i).isTypeOf(context, tList.get(i), types))
                 throw new NoSuchTypeException();
+        }   */
+        for (CuType ct : ts.data_tc.values()) {
+        	tList.add(ct);
         }   
+        for (int i = 0; i < es.size(); i++) {
+        	if (!es.get(i).isTypeOf(context, tList.get(i), types))
+        		throw new NoSuchTypeException();
+        }        
         System.out.println("in VarExp, end");
         return ts.data_t;
 	}
@@ -478,7 +486,7 @@ class VvExp extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) {
-		System.out.println("in VvExp, begin");
+		System.out.println("in VvExp, begin " + val);
 		if (es == null) return context.getVariable(val);
 		//else, it will be the same as in VcExp
         // check tao in scope
