@@ -60,15 +60,28 @@ public abstract class CuType {
 	public static CuType commonParent(CuType t1, CuType t2) {
 		if (t1 == null || t1.isBottom()) return t2;
 		if (t2 == null || t2.isBottom() ) return t1;
+		System.out.println("t1 is " + t1.toString());
+		System.out.println("t2 is " + t2.toString());
 		if(t1.isIterable() && t2.isIterable())
 		{
+			System.out.println("common parent of " + t1.getArgument() + " " + t2.getArgument());
 			return new Iter(CuType.commonParent(t1.getArgument(), t2.getArgument()));
 		}
 		List<CuType> parent1 = superTypeList(t1);
 		List<CuType> parent2 = superTypeList(t2);
-		for (CuType p : parent1) {
-			if (parent2.contains(p)) return p;
+		System.out.println("parent 1 is ");
+		for (CuType p : parent1) { 
+			System.out.println(p.toString());
 		}
+		System.out.println("parent 2 is ");
+		for (CuType p : parent2) { 
+			System.out.println(p.toString());
+		}
+		for (CuType p : parent1) {
+			System.out.println("p is " + p.toString());
+			if (parent2.contains(p)) { System.out.println(	"returned p which is " + p.toString()); return p;}
+		}
+		System.out.println("returned top");
 		return top;
 	}
 	public CuType calculateType(CuContext context) throws NoSuchTypeException { return null;}
@@ -216,7 +229,14 @@ class VClass extends CuType {
 			VClass t = (VClass) that;
 			Set<CuType> tp1 = this.map.keySet();
 			Set<CuType> tp2 = t.map.keySet();
-			return super.id.equals(t.id) && tp1.equals(tp2);
+Helper.P(String.format("%s is:", tp1));
+for (CuType x : tp1) {
+	for(CuType y : tp2) {
+		Helper.P(String.format("%s in tp1 = %s in tp2 is %b", x, y, x.equals(y)));
+	}
+	}
+Helper.P(String.format("%s equals %s is %b, %s = %s is %b", super.id, t.id, super.id.equals(t.id), tp1, tp2, tp1.equals(tp2)));
+			return super.id.equals(t.id) && Helper.equals(tp1, tp2);
 		}
 		return false;
 	}
@@ -283,6 +303,7 @@ class VTypePara extends CuType {
 	}
 	@Override public boolean isTypePara() {return true;}
 	@Override public boolean equals(CuType that) {
+Helper.P(String.format("TypePara is %b, %s=%s is %b", that.isTypePara(), super.id, that.id, super.id.equals(that.id)));
 		return that.isTypePara() && super.id.equals(that.id);
 	}
 	public CuType calculateType(CuContext context) throws NoSuchTypeException {

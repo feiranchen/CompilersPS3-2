@@ -66,7 +66,10 @@ public class CuContext {
     		if (context.inMutVar(key)) {
 	    		CuType t1 = this.getMutVariable(key);
 	    		CuType t2 = context.getMutVariable(key);
+	    		System.out.println("t1 is " + t1.id + " t2 is " + t2.id);
+	    		System.out.println("t1 type is is " + t1.type.id + " t2 type is " + t2.type.id);
 	    		CuType tCom = CuType.commonParent(t1, t2);
+	    		System.out.println("tCom is " + tCom);
 	    		new_mMutVariables.put(key, tCom);
     		}
     	}

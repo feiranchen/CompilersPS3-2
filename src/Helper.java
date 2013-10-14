@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.*;
 
@@ -39,6 +40,16 @@ public class Helper {
 			else s+= t.toString() + " ";
 		}
 		return s;
+	}
+	protected static <T> boolean equals (Set<T> x, Set<T> y) {
+		for (T t1 : x) {
+			boolean t1E = false;
+			for (T t2 : y) {
+				if (!t1E && t1.equals(t2))  t1E = true;
+			}
+			if (!t1E) return false;
+		}
+		return x.size()==y.size();
 	}
 	
 	protected static void P(String s) {
