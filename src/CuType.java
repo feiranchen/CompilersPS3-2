@@ -11,6 +11,7 @@ public abstract class CuType {
 	protected static CuType string = new VClass("String", new ArrayList<CuType>());
 	protected static CuType iterable(ArrayList<CuType> arg) {return new VClass("Iterable", arg);}
 	protected List<CuType> parentType = new ArrayList<CuType>();
+	List<CuType> parents = new ArrayList<CuType>();
 	protected String id;
 	protected String text = "";
 	protected Map<CuType, CuType> map = new LinkedHashMap<CuType, CuType>();// typeParameter->non-generic type arguments
@@ -19,7 +20,7 @@ public abstract class CuType {
 	CuType(){ changeParent(top); }
 
 	/** methods in its subtypes */
-	public void changeParents(List<CuType> t) {}
+	public void changeParents(List<CuType> t) {parentType.addAll(t);}
 	public void changeParent(CuType t) {
 		parentType = new ArrayList<CuType>();
 		parentType.add(t);
@@ -104,13 +105,20 @@ class VClass extends CuType {
 			parentType.add(character);
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
 		//add by Yinglei to fix a bug in test12
-		if (super.id.equals("Iterable") && args != null && !(args.size()==0)) {
-			super.type = args.get(0);
-		}
+		if (super.id.equals("Iterable") ) {
+			if ((args == null) || (args.size()==0)) {
+				throw new NoSuchTypeException();
+			}
+			else {
+				super.type = args.get(0);
+			}
+		}		
+		//constructor can not build the superType, superType is built in calculateType, so be sure to call this function
+		//note in the original code, nowhere builds the superType
 	}
 	@Override public CuType calculateType(CuContext context) {
 		// type in argument must be type parameter, mapped args must be in scope
-		for (Entry<CuType, CuType> m: map.entrySet()) {
+		/*for (Entry<CuType, CuType> m: map.entrySet()) {
 			if (!m.getKey().isTypePara() || !context.getKindList().contains(m.getKey().id)) 
 				if (!m.getValue().isBottom() && !context.mVariables.containsKey(m.getValue())) {
 					throw new NoSuchTypeException(); 
@@ -120,6 +128,42 @@ class VClass extends CuType {
 		CuClass c = context.mClasses.get(id);
 		if (c == null) throw new NoSuchTypeException(); 
 		if (c.isInterface()) return CuType.top;
+		return this; */
+		//Yinglei says "please check figure 4 !!!!!!!!!!!!!!!!!!!!!!!!!!
+		CuClass c = context.mClasses.get(id);
+		if (c == null) throw new NoSuchTypeException(); 
+		int t1 = c.kindCtxt.size();
+		int t2 = map.keySet().size();
+		if (t1 != t2) {
+			throw new NoSuchTypeException();
+		}
+		for (CuType iter : map.keySet()) {
+			iter.calculateType(context);
+		}
+		//build superType
+		if (c.superType instanceof VClass) {
+			super.changeParent(c.superType);
+		}
+		else if (c.superType instanceof VTypeInter) {
+			super.changeParents(parents);
+		}
+		else {
+			if (!c.superType.isTop()) {
+				throw new NoSuchTypeException();
+			}
+		}
+		
+		//special process for iterable
+		if(id.equals("Iterable")) {
+			List <CuType> iter_parrents = new ArrayList<CuType>();
+			for (CuType t : type.parentType) {
+				//System.out.println(t.id);	
+				if (!t.isTop()) iter_parrents.add(new Iter(t));
+			}
+			parentType.addAll(iter_parrents);
+		}
+		
+		if (c.isInterface()) return CuType.top;
 		return this;
 	}
 	/* instantiate this class, strict plug in */
@@ -128,9 +172,10 @@ class VClass extends CuType {
 		if(map.size() != t.size()) {throw new NoSuchTypeException();}
 		int i = 0;
 		for (Entry<CuType, CuType> k : map.entrySet()) {
-			if(t.get(i).isTypePara()) {
+			//commented out by Yinglei, can be TypeParam
+			/*if(t.get(i).isTypePara()) {
 				throw new NoSuchTypeException();
-			}
+			}*/
 			k.setValue(t.get(i));
 			i++;
 		}
@@ -196,12 +241,9 @@ class VClass extends CuType {
 
 
 class VTypeInter extends CuType {
-	List<CuType> parents = new ArrayList<CuType>();
 	public VTypeInter(CuType t1){
 		parents.add(t1);
 		super.text=t1.toString();
-		Helper.ToDo("Yinglei added the following line, please check");
-		super.parentType = parents;
 	}
 	@Override public void add(CuType t) {
 		parents.add(t);
@@ -214,14 +256,17 @@ class VTypeInter extends CuType {
 		for(int i = 0; i < parents.size(); i++) {
 			CuType t = parents.get(i);
 			// A & B & C..., only the first could be a class
-			//Yinglei asks: why do we have this checking?
-			if ((i > 0) && !t.calculateType(context).isTop()) throw new NoSuchTypeException();
+			//we still need to type check the first one
+			if (!t.isTop() && !(t.isClassOrInterface())) {
+				throw new NoSuchTypeException();
+			}
+			CuType cur_type = t.calculateType(context);
+			if ((i > 0) && !cur_type.isTop()) throw new NoSuchTypeException();
 			// all parents are distinct except top
 			List<CuType> temp = t.parentType;
 			temp.remove(CuType.top);
 			if(!pAll.addAll(temp)) throw new NoSuchTypeException();
 			// all method names are distinct
-			Helper.ToDo("Please check the addAll method, if there are existing keys, will it return false?");
 			Set<String> temp2 = context.mClasses.get(t.id).mFunctions.keySet();
 			if(!vAll.addAll(temp2)) throw new NoSuchTypeException();
 		}
@@ -270,11 +315,10 @@ class Iter extends VClass {
 		List<CuType> parents = new ArrayList<CuType>();
 		for (CuType t : arg.parentType) {
 			//System.out.println(t.id);	
-			//Helper.ToDo("Yiglei changed this to t, remember to change related things");
 			if (!t.isTop()) parents.add(new Iter(t));
 		}
 		if (!parents.isEmpty()) super.changeParents(parents);
-		Helper.ToDo("type check Iterable?");
+		//Helper.ToDo("type check Iterable?");
 		//System.out.println("in iter end");
 	}
 	@Override public boolean isIterable() {return true;}
@@ -323,13 +367,21 @@ class Top extends CuType{
 	@Override public CuType calculateType(CuContext context) { return this;}
 	@Override public boolean isTop() {return true;}
 	@Override public boolean equals(CuType that) { return that.isTop();}
-	@Override public boolean isSubtypeOf(CuType t) { System.out.println("in class Top"); return false;}
+	@Override public boolean isSubtypeOf(CuType t) { 
+		if (t.isTop()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 }
 class Bottom extends CuType {
 	public Bottom(){
 		super.id = CuVvc.BOTTOM;
 		super.text= "Nothing";
 	}
+	@Override public CuType calculateType(CuContext context) { return this;}
 	@Override public boolean isBottom() {return true;}
 	@Override public boolean isSubtypeOf(CuType t) { System.out.println("in class Bottom"); return true;}
 	@Override public boolean equals(CuType that) { return that.isBottom();}

@@ -37,7 +37,8 @@ type returns [CuType t]
 | THING {$t = new Top();}
 | NOTHING {$t = new Bottom();}
 | CLSINTF p=paratype {$t = new VClass($CLSINTF.text, $p.pt);}
-| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);};
+| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);} ( AMPERSAND rr=type {$t.add($rr.t);})*;
+//| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);};
 
 typescheme returns [CuTypeScheme ts]
 : kc=kindcontext tc=typecontext COLON t=type {$ts = new TypeScheme($kc.kc, $tc.tc, $t.t);};
