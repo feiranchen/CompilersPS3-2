@@ -23,8 +23,6 @@ public abstract class CuExpr {
 	@Override public String toString() {return text;}
 	
 	protected CuType binaryExprType(CuContext context, String leftId, String methodId, CuType rightType) throws NoSuchTypeException {
-		Helper.ToDo("requires function map id->typescheme");
-		Helper.ToDo("leave this to function?");
 		System.out.println("in binaryExprType, begin");
 		System.out.println("leftid is " + leftId + ", methodid is " + methodId + ",right type is " + rightType.id);
 		// get the functions of left class
@@ -105,12 +103,18 @@ class AppExpr extends CuExpr {
 		this.right = e2;
 		super.text = e1.toString() + " ++ " + e2.toString();
 	}
-	@Override protected CuType calculateType(CuContext context) {
-		CuType type = CuType.commonParent(left.getType(context), right.getType(context));
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		CuType t1 = left.calculateType(context);
+		CuType t2 = right.calculateType(context);
+		if (!t1.isIterable() || !t2.isIterable()) {
+			throw new NoSuchTypeException();
+		}
+		CuType type = CuType.commonParent(t1.type, t2.type);
+		return new Iter(type);
+		/*CuType type = CuType.commonParent(left.getType(context), right.getType(context));
 		if (type.isIterable()) return type;
 		if (type.isBottom()) return new Iter(CuType.bottom);
-		Helper.ToDo("Bottom <: Iterable<Bot>?");
-		throw new NoSuchTypeException();
+		Helper.ToDo("Bottom <: Iterable<Bot>?"); */
 	}
 }
 
@@ -209,7 +213,8 @@ class EqualExpr extends CuExpr{
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		CuType t = binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 		if (method2 != null) {
-			return context.mFunctions.get(method2).data_t;
+			CuClass cur_class = context.mClasses.get(t.id);
+			return cur_class.mFunctions.get(method2).data_t;
 		}
 		return t;
 	}
@@ -232,8 +237,9 @@ class GreaterThanExpr extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		Helper.ToDo("to simple");
-		if (!left.isTypeOf(context, CuType.integer) || !right.isTypeOf(context, CuType.integer))
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
 			throw new NoSuchTypeException();
 		return CuType.bool;
 	}
@@ -248,8 +254,9 @@ class LessThanExpr extends CuExpr{
 		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		Helper.ToDo("too simple");
-		if (!left.isTypeOf(context, CuType.integer) || !right.isTypeOf(context, CuType.integer))
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
 			throw new NoSuchTypeException();
 		return CuType.bool;
 	}
@@ -377,10 +384,14 @@ class ThroughExpr extends CuExpr{
 		super.text = String.format("%s . %s < > ( %s , %s , %s )", left.toString(), methodId, right.toString(), low, up);	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		Helper.ToDo("too simple");
-		if (!left.isTypeOf(context, CuType.integer) || !right.isTypeOf(context, CuType.integer))
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
 			throw new NoSuchTypeException();
-		return new Iter(CuType.integer);
+		if (b1)
+			return new Iter(CuType.integer);
+		else
+			return new Iter(CuType.bool);
 	}
 }
 
@@ -410,11 +421,18 @@ class VarExpr extends CuExpr{
 		super.text = String.format("%s . %s %s %s", this.val.toString(), this.method, 
 				Helper.printList("<", this.types, ">", ","), Helper.printList("(", this.es, ")", ","));
 	}
-	@Override protected CuType calculateType(CuContext context) {
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		System.out.println("in VarExp, begin");
         CuType tHat = val.getType(context); // 1st line in Figure 5 exp
         System.out.println("t_hat is " + tHat.id);
-        CuTypeScheme ts = context.mClasses.get(tHat.id).mFunctions.get(method);
+        CuClass cur_class = context.mClasses.get(tHat.id);
+        if (cur_class == null) {
+        	throw new NoSuchTypeException();
+        }
+        CuTypeScheme ts = cur_class.mFunctions.get(method);
+        if (ts == null) {
+        	throw new NoSuchTypeException();
+        }
         System.out.println("got this function");
         List<CuType> tList = new ArrayList<CuType>();
         /*for (String s : ts.data_kc) {
@@ -452,7 +470,10 @@ class VcExp extends CuExpr {
 	}
 	@Override protected CuType calculateType(CuContext context)  throws NoSuchTypeException{
 		System.out.println("in VcExp, begin");
-        // check tao in scope
+		//type check each tao_i // check tao in scope
+		for (CuType ct : types) {
+			ct.calculateType(context);
+		}       
         if (context.getFunction(val) == null) throw new NoSuchTypeException();
         // check each es 
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
@@ -493,6 +514,10 @@ class VvExp extends CuExpr{
 		System.out.println("not a variable, checking function context");
         if (context.getFunction(val) == null) throw new NoSuchTypeException();
         System.out.println("got this function from function context");
+		//type check each tao_i // check tao in scope
+		for (CuType ct : types) {
+			ct.calculateType(context);
+		}     
         // check each es 
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();

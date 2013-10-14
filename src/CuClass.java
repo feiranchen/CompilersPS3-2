@@ -100,7 +100,7 @@ class Cls extends CuClass {
 		}
 		else if (superType instanceof VTypeInter) {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
-			for (CuType t:superType.parentType){
+			for (CuType t: superType.parentType){
 				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 					//check signature if already exists
@@ -292,7 +292,7 @@ class Intf extends CuClass{
 		}
 		else if (superType instanceof VTypeInter) {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
-			for (CuType t:superType.parentType){
+			for (CuType t: superType.parentType){
 				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 					//check signature if already exists

@@ -9,8 +9,9 @@ public abstract class CuType {
 	protected static CuType integer = new VClass("Integer", new ArrayList<CuType>());
 	protected static CuType character = new VClass("Character", new ArrayList<CuType>());
 	protected static CuType string = new VClass("String", new ArrayList<CuType>());
-	protected static CuType iterable(ArrayList<CuType> arg) {return new VClass("Iterable", arg);}
+	protected static CuType iterable(ArrayList<CuType> arg) {return new Iter(arg);}
 	protected List<CuType> parentType = new ArrayList<CuType>();
+	List<CuType> parents = new ArrayList<CuType>();
 	protected String id;
 	protected String text = "";
 	protected Map<CuType, CuType> map = new LinkedHashMap<CuType, CuType>();// typeParameter->non-generic type arguments
@@ -119,12 +120,45 @@ class VClass extends CuType {
 		// TODO: mapping and plugin checking
 /*		// type in argument must be type parameter, mapped args must be in scope
 		for (Entry<CuType, CuType> m: map.entrySet()) {
+
 			if (!m.getKey().isTypePara() || !context.getKindList().contains(m.getKey().id)) 
 				if (!m.getValue().isBottom() && !context.mVariables.containsKey(m.getValue())) {
 					throw new NoSuchTypeException(); 
 				}	
 		}
 */
+		//TODO: check size
+		int t1 = c.kindCtxt.size();
+		int t2 = map.keySet().size();
+		if (t1 != t2) {
+			throw new NoSuchTypeException();
+		}
+		for (CuType iter : map.keySet()) {
+			iter.calculateType(context);
+		}
+		//build superType
+		if (c.superType instanceof VClass) {
+			super.changeParent(c.superType);
+		}
+		else if (c.superType instanceof VTypeInter) {
+			super.changeParents(parents);
+		}
+		else {
+			if (!c.superType.isTop()) {
+				throw new NoSuchTypeException();
+			}
+		}
+		
+		//special process for iterable
+		if(id.equals("Iterable")) {
+			List <CuType> iter_parrents = new ArrayList<CuType>();
+			for (CuType t : type.parentType) {
+				//System.out.println(t.id);	
+				if (!t.isTop()) iter_parrents.add(new Iter(t));
+			}
+			parentType.addAll(iter_parrents);
+		}
+		
 		if (c.isInterface()) return CuType.top;
 		return this;
 	}
@@ -134,9 +168,10 @@ class VClass extends CuType {
 		if(map.size() != t.size()) {throw new NoSuchTypeException();}
 		int i = 0;
 		for (Entry<CuType, CuType> k : map.entrySet()) {
-			if(t.get(i).isTypePara()) {
+			//commented out by Yinglei, can be TypeParam
+			/*if(t.get(i).isTypePara()) {
 				throw new NoSuchTypeException();
-			}
+			}*/
 			k.setValue(t.get(i));
 			i++;
 		}
@@ -341,13 +376,21 @@ class Top extends CuType{
 	@Override public CuType calculateType(CuContext context) { return this;}
 	@Override public boolean isTop() {return true;}
 	@Override public boolean equals(CuType that) { return that.isTop();}
-	@Override public boolean isSubtypeOf(CuType t) { System.out.println("in class Top"); return false;}
+	@Override public boolean isSubtypeOf(CuType t) { 
+		if (t.isTop()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 }
 class Bottom extends CuType {
 	public Bottom(){
 		super.id = CuVvc.BOTTOM;
 		super.text= "Nothing";
 	}
+	@Override public CuType calculateType(CuContext context) { return this;}
 	@Override public boolean isBottom() {return true;}
 	@Override public boolean isSubtypeOf(CuType t) { System.out.println("in class Bottom"); return true;}
 	@Override public boolean equals(CuType that) { return that.isBottom();}
