@@ -101,17 +101,23 @@ class VClass extends CuType {
 		for (CuType t : args) {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
-		if (s.equals("String"))
-			parentType.add(character);
+		/*if (s.equals("String"))
+			parentType.add(character);*/
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
 		//add by Yinglei to fix a bug in test12
 		if (super.id.equals("Iterable") ) {
 			if ((args == null) || (args.size()==0)) {
-				throw new NoSuchTypeException();
+				super.type = CuType.bottom;
 			}
 			else {
 				super.type = args.get(0);
 			}
+			/*if ((args == null) || (args.size()==0)) {
+				throw new NoSuchTypeException();
+			}
+			else {
+				super.type = args.get(0);
+			}*/
 		}		
 		//constructor can not build the superType, superType is built in calculateType, so be sure to call this function
 		//note in the original code, nowhere builds the superType
