@@ -36,8 +36,9 @@ type returns [CuType t]
 : v = TPARA {$t = new VTypePara($v.text);}
 | THING {$t = new Top();}
 | NOTHING {$t = new Bottom();}
+| ITERABLE p=paratype {$t = new Iter($p.pt);}
 | CLSINTF p=paratype {$t = new VClass($CLSINTF.text, $p.pt);}
-| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);};
+| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);} (AMPERSAND r1=type {$t.add($r1.t);})*;
 
 typescheme returns [CuTypeScheme ts]
 : kc=kindcontext tc=typecontext COLON t=type {$ts = new TypeScheme($kc.kc, $tc.tc, $t.t);};

@@ -14,12 +14,11 @@ public abstract class CuType {
 	protected String id;
 	protected String text = "";
 	protected Map<CuType, CuType> map = new LinkedHashMap<CuType, CuType>();// typeParameter->non-generic type arguments
-	protected CuType type = bottom; // for Iterable<>
-
+	protected CuType type = CuType.bottom; // for Iterable<E>
 	CuType(){ changeParent(top); }
 
 	/** methods in its subtypes */
-	public void changeParents(List<CuType> t) {}
+	public void changeParents(List<CuType> t) {parentType = t;}
 	public void changeParent(CuType t) {
 		parentType = new ArrayList<CuType>();
 		parentType.add(t);
@@ -37,8 +36,12 @@ public abstract class CuType {
 
 	public void add(CuType t) {}
 	public CuType getArgument() throws NoSuchTypeException {
+		// Iterable<E>, map only has one key
+		for (CuType t : this.map.keySet()) {
+			return t;
+		}
 		//throw new NoSuchTypeException();
-		return this.type;
+		return null;
 	}
 	public Map<CuType, CuType> plugIn(List<CuType> t) { return map;}
 	public Map<CuType, CuType> plugIn(Map<CuType, CuType> t) {return map;}
@@ -58,7 +61,7 @@ public abstract class CuType {
 		if (t2 == null || t2.isBottom() ) return t1;
 		if(t1.isIterable() && t2.isIterable())
 		{
-			return new Iter(CuType.commonParent(t1.type, t2.type));
+			return new Iter(CuType.commonParent(t1.getArgument(), t2.getArgument()));
 		}
 		List<CuType> parent1 = superTypeList(t1);
 		List<CuType> parent2 = superTypeList(t2);
@@ -100,25 +103,28 @@ class VClass extends CuType {
 		for (CuType t : args) {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
-		if (s.equals("String"))
-			parentType.add(character);
+//		if (s.equals("String")) parentType.add(new Iter(CuType.character)); // String<> extends Iterable<Character<>>
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
-		//add by Yinglei to fix a bug in test12
-		if (super.id.equals("Iterable") && args != null && !(args.size()==0)) {
-			super.type = args.get(0);
+		// TODO: merge to Iter()
+		if (super.id.equals("Iterable")) {
+			if (args.size()>1) throw new NoSuchTypeException(); // Iterable<E>, E cannot have 2 or more elements
 		}
 	}
 	@Override public CuType calculateType(CuContext context) {
-		// type in argument must be type parameter, mapped args must be in scope
+		// check if class or interface
+		CuClass c = context.mClasses.get(id);
+		if (c == null) throw new NoSuchTypeException(); 
+		// get its parent types, for isSubtypeOf()
+		super.changeParent(context.mClasses.get(id).superType);
+		// TODO: mapping and plugin checking
+/*		// type in argument must be type parameter, mapped args must be in scope
 		for (Entry<CuType, CuType> m: map.entrySet()) {
 			if (!m.getKey().isTypePara() || !context.getKindList().contains(m.getKey().id)) 
 				if (!m.getValue().isBottom() && !context.mVariables.containsKey(m.getValue())) {
 					throw new NoSuchTypeException(); 
 				}	
 		}
-		// check if class or interface
-		CuClass c = context.mClasses.get(id);
-		if (c == null) throw new NoSuchTypeException(); 
+*/
 		if (c.isInterface()) return CuType.top;
 		return this;
 	}
@@ -146,7 +152,6 @@ class VClass extends CuType {
 		}
 		return this.map;
 	}
-	//TODO: change this method
 	@Override public boolean isClassOrInterface() {return true;}
 	@Override public boolean isSubtypeOf(CuType that) {
 		if (this.equals(that)) return true;
@@ -189,52 +194,46 @@ class VClass extends CuType {
 	@Override public boolean isCharacter() {return super.id.equals("Character");}
 	@Override public boolean isInteger() {return super.id.equals("Integer");}
 	@Override public boolean isBoolean() {return super.id.equals("Boolean");}
-	@Override public CuType getArgument() throws NoSuchTypeException {
-		return type;
-	}
 }
 
 
 class VTypeInter extends CuType {
-	List<CuType> parents = new ArrayList<CuType>();
 	public VTypeInter(CuType t1){
-		parents.add(t1);
+		super.parentType = new ArrayList<CuType>();
+		parentType.add(t1);
 		super.text=t1.toString();
-		Helper.ToDo("Yinglei added the following line, please check");
-		super.parentType = parents;
 	}
 	@Override public void add(CuType t) {
-		parents.add(t);
+		parentType.add(t);
 		super.text += " \u222A "+t.toString();
 	}
 	@Override public CuType calculateType(CuContext context) throws NoSuchTypeException {
 		/* type checking */
 		HashSet<CuType> pAll = new HashSet<CuType>(); 
 		HashSet<String> vAll = new HashSet<String>(); 
-		for(int i = 0; i < parents.size(); i++) {
-			CuType t = parents.get(i);
+		for(int i = 0; i < parentType.size(); i++) {
+			CuType t = parentType.get(i);
 			// A & B & C..., only the first could be a class
-			//Yinglei asks: why do we have this checking?
 			if ((i > 0) && !t.calculateType(context).isTop()) throw new NoSuchTypeException();
 			// all parents are distinct except top
 			List<CuType> temp = t.parentType;
 			temp.remove(CuType.top);
 			if(!pAll.addAll(temp)) throw new NoSuchTypeException();
 			// all method names are distinct
-			Helper.ToDo("Please check the addAll method, if there are existing keys, will it return false?");
 			Set<String> temp2 = context.mClasses.get(t.id).mFunctions.keySet();
 			if(!vAll.addAll(temp2)) throw new NoSuchTypeException();
 		}
-		return parents.get(0).calculateType(context);
+		return parentType.get(0).calculateType(context);
 	}
 	@Override public boolean isIntersect() {return true;}
-	@Override public void changeParents(List<CuType> t) {
-		super.parentType = parents;
+/*	@Override public void changeParents(List<CuType> t) {
+		super.parentType = t;
 	}
+*/
 	@Override public boolean equals(CuType that) {
 		if (that.isIntersect()) {
 			VTypeInter t = (VTypeInter) that;
-			return parents.containsAll(t.parents) && t.parents.containsAll(parents);
+			return parentType.containsAll(t.parentType) && t.parentType.containsAll(parentType);
 		}
 		return false;
 	}
@@ -259,30 +258,49 @@ class VTypePara extends CuType {
 	}
 }
 
-
 class Iter extends VClass {
-	public Iter(CuType arg) {
+	public Iter(CuType args) {
 		super(CuVvc.ITERABLE, new ArrayList<CuType> ()); // id is "Iterable"
-		//System.out.println("in iter begin");
-		super.type = arg;
+		CuType arg = (args == null) ? CuType.bottom : args;
+		init(arg);
+	}
+	public Iter(List<CuType> args) {
+		super(CuVvc.ITERABLE, args); // id is "Iterable"
+		CuType arg = (args.isEmpty()) ? CuType.bottom : args.get(0);
+		init(arg);
+	}
+	
+	private void init(CuType arg) {// arg is not null
+		map.put(arg, CuType.bottom); // type parameter is mapped to bottom initially
 		super.text=super.id+ " <" + arg.toString()+">";
 		// set its parent types
 		List<CuType> parents = new ArrayList<CuType>();
 		for (CuType t : arg.parentType) {
 			//System.out.println(t.id);	
-			//Helper.ToDo("Yiglei changed this to t, remember to change related things");
 			if (!t.isTop()) parents.add(new Iter(t));
 		}
 		if (!parents.isEmpty()) super.changeParents(parents);
-		Helper.ToDo("type check Iterable?");
+		type = this.getArgument();
 		//System.out.println("in iter end");
 	}
 	@Override public boolean isIterable() {return true;}
 	@Override public boolean equals(CuType that) {
-		return that.isIterable() && ((VClass)that).type.equals(this.type);
+		return that.isIterable() && this.type.equals(((VClass)that).type);
 	}
-	@Override public CuType getArgument() throws NoSuchTypeException {
-		return type;
+	@Override public CuType calculateType(CuContext context) {
+		// check if class or interface
+		CuClass c = context.mClasses.get(id);
+		if (c == null) throw new NoSuchTypeException(); 
+		// TODO: mapping and plugin checking
+/*		// type in argument must be type parameter, mapped args must be in scope
+		for (Entry<CuType, CuType> m: map.entrySet()) {
+			if (!m.getKey().isTypePara() || !context.getKindList().contains(m.getKey().id)) 
+				if (!m.getValue().isBottom() && !context.mVariables.containsKey(m.getValue())) {
+					throw new NoSuchTypeException(); 
+				}	
+		}
+*/
+		return this;
 	}
 }
 
