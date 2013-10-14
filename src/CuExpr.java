@@ -23,8 +23,6 @@ public abstract class CuExpr {
 	@Override public String toString() {return text;}
 	
 	protected CuType binaryExprType(CuContext context, String leftId, String methodId, CuType rightType) throws NoSuchTypeException {
-		Helper.ToDo("requires function map id->typescheme");
-		Helper.ToDo("leave this to function?");
 		System.out.println("in binaryExprType, begin");
 		System.out.println("leftid is " + leftId + ", methodid is " + methodId + ",right type is " + rightType.id);
 		// get the functions of left class
@@ -76,7 +74,7 @@ public abstract class CuExpr {
     protected Boolean isTypeOf(CuContext context, CuType t, List<CuType> map) {
         CuType type = this.getType(context);
 Helper.P("isTypeOf ");
-        type.plugIn(map);
+//type.plugIn(map);
 Helper.P("isTypeOf"+map.toString());
         return type.isSubtypeOf(t);
     }
@@ -105,12 +103,18 @@ class AppExpr extends CuExpr {
 		this.right = e2;
 		super.text = e1.toString() + " ++ " + e2.toString();
 	}
-	@Override protected CuType calculateType(CuContext context) {
-		CuType type = CuType.commonParent(left.getType(context), right.getType(context));
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		CuType t1 = left.calculateType(context);
+		CuType t2 = right.calculateType(context);
+		if (!t1.isIterable() || !t2.isIterable()) {
+			throw new NoSuchTypeException();
+		}
+		CuType type = CuType.commonParent(t1.type, t2.type);
+		return new Iter(type);
+		/*CuType type = CuType.commonParent(left.getType(context), right.getType(context));
 		if (type.isIterable()) return type;
 		if (type.isBottom()) return new Iter(CuType.bottom);
-		Helper.ToDo("Bottom <: Iterable<Bot>?");
-		throw new NoSuchTypeException();
+		Helper.ToDo("Bottom <: Iterable<Bot>?"); */
 	}
 }
 
@@ -121,13 +125,15 @@ class BrkExpr extends CuExpr {
 		super.text=Helper.printList("[", val, "]", ",");
 	}
 	@Override protected CuType calculateType(CuContext context) {
+		System.out.println("in bracket expression, start");
 		if (val == null || val.isEmpty()) return new Iter(CuType.bottom);
 		CuType t = val.get(0).getType(context);
+		System.out.println("type id is " + t.id);
 		for (int i = 0; i+1 < val.size(); i++) {
 			t = CuType.commonParent(val.get(i).getType(context), val.get(i+1).getType(context));
 		} // find the common parent type of all expressions here
 		
-		System.out.println("in bracket expression now");
+		System.out.println("in bracket expression end");
 		
 		return new Iter(t);
 	}
@@ -207,7 +213,8 @@ class EqualExpr extends CuExpr{
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		CuType t = binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 		if (method2 != null) {
-			return context.mFunctions.get(method2).data_t;
+			CuClass cur_class = context.mClasses.get(t.id);
+			return cur_class.mFunctions.get(method2).data_t;
 		}
 		return t;
 	}
@@ -230,8 +237,9 @@ class GreaterThanExpr extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		Helper.ToDo("to simple");
-		if (!left.isTypeOf(context, CuType.integer) || !right.isTypeOf(context, CuType.integer))
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
 			throw new NoSuchTypeException();
 		return CuType.bool;
 	}
@@ -246,8 +254,9 @@ class LessThanExpr extends CuExpr{
 		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		Helper.ToDo("too simple");
-		if (!left.isTypeOf(context, CuType.integer) || !right.isTypeOf(context, CuType.integer))
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
 			throw new NoSuchTypeException();
 		return CuType.bool;
 	}
@@ -375,10 +384,14 @@ class ThroughExpr extends CuExpr{
 		super.text = String.format("%s . %s < > ( %s , %s , %s )", left.toString(), methodId, right.toString(), low, up);	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		Helper.ToDo("too simple");
-		if (!left.isTypeOf(context, CuType.integer) || !right.isTypeOf(context, CuType.integer))
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
 			throw new NoSuchTypeException();
-		return new Iter(CuType.integer);
+		if (b1)
+			return new Iter(CuType.integer);
+		else
+			return new Iter(CuType.bool);
 	}
 }
 
@@ -400,7 +413,7 @@ class VarExpr extends CuExpr{
 	private String method;
 	private List<CuType> types;
 	List<CuExpr> es;
-	public VarExpr(CuExpr e, String var, List<CuType> pt, List<CuExpr> es) {
+	public VarExpr(CuExpr e, String var, List<CuType> pt, List<CuExpr> es) {		
 		this.val = e;
 		this.method = var;
 		this.types = pt;
@@ -408,17 +421,35 @@ class VarExpr extends CuExpr{
 		super.text = String.format("%s . %s %s %s", this.val.toString(), this.method, 
 				Helper.printList("<", this.types, ">", ","), Helper.printList("(", this.es, ")", ","));
 	}
-	@Override protected CuType calculateType(CuContext context) {
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		System.out.println("in VarExp, begin");
         CuType tHat = val.getType(context); // 1st line in Figure 5 exp
-        CuTypeScheme ts = context.mClasses.get(tHat.id).mFunctions.get(method);
+        System.out.println("t_hat is " + tHat.id);
+        CuClass cur_class = context.mClasses.get(tHat.id);
+        if (cur_class == null) {
+        	throw new NoSuchTypeException();
+        }
+        CuTypeScheme ts = cur_class.mFunctions.get(method);
+        if (ts == null) {
+        	throw new NoSuchTypeException();
+        }
+        System.out.println("got this function");
         List<CuType> tList = new ArrayList<CuType>();
-        for (String s : ts.data_kc) {
+        /*for (String s : ts.data_kc) {
             tList.add(ts.data_tc.get(s));
         }   
         for (int i = 0; i < es.size(); i++) {
             if (!es.get(i).isTypeOf(context, tList.get(i), types))
                 throw new NoSuchTypeException();
+        }   */
+        for (CuType ct : ts.data_tc.values()) {
+        	tList.add(ct);
         }   
+        for (int i = 0; i < es.size(); i++) {
+        	if (!es.get(i).isTypeOf(context, tList.get(i), types))
+        		throw new NoSuchTypeException();
+        }        
+        System.out.println("in VarExp, end");
         return ts.data_t;
 	}
 
@@ -428,14 +459,21 @@ class VcExp extends CuExpr {
 	private List<CuType> types;
 	private List<CuExpr> es;
 	public VcExp(String v, List<CuType> pt, List<CuExpr> e){
+		System.out.println("in VcExp constructor, begin");
+		
 		this.val=v;
 		this.types=pt;
 		this.es=e;
 		
 		super.text=val.toString()+Helper.printList("<", types, ">", ",")+Helper.printList("(", es, ")", ",");
+		System.out.println("in VcExp constructor, end");
 	}
 	@Override protected CuType calculateType(CuContext context)  throws NoSuchTypeException{
-        // check tao in scope
+		System.out.println("in VcExp, begin");
+		//type check each tao_i // check tao in scope
+		for (CuType ct : types) {
+			ct.calculateType(context);
+		}       
         if (context.getFunction(val) == null) throw new NoSuchTypeException();
         // check each es 
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
@@ -447,6 +485,7 @@ class VcExp extends CuExpr {
             if (!es.get(i).isTypeOf(context, tList.get(i), types))
                 throw new NoSuchTypeException();
         }
+        System.out.println("in VcExp, end");
         return cur_ts.data_t;
 	}
 }
@@ -468,13 +507,17 @@ class VvExp extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) {
-		System.out.println("in VvExp, begin");
+		System.out.println("in VvExp, begin " + val);
 		if (es == null) return context.getVariable(val);
 		//else, it will be the same as in VcExp
         // check tao in scope
 		System.out.println("not a variable, checking function context");
         if (context.getFunction(val) == null) throw new NoSuchTypeException();
         System.out.println("got this function from function context");
+		//type check each tao_i // check tao in scope
+		for (CuType ct : types) {
+			ct.calculateType(context);
+		}     
         // check each es 
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();

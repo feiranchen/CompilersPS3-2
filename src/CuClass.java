@@ -112,8 +112,14 @@ class Cls extends CuClass {
 			//update the outside context at the end.
 		}
 		else if (superType instanceof VTypeInter) {
+<<<<<<< HEAD
 			for (CuType t:superType.parentType){
 				Map<String, CuFun> superfunLst= snd_context.mClasses.get(t.id).funList;
+=======
+			Helper.ToDo("Please check whether the parrentType is implmented correctly");
+			for (CuType t: superType.parentType){
+				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
+>>>>>>> d11c87eaab61f981028e4d82fed4bbf5db987995
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 					//if this method already exists
 					if (funList.containsKey(e.getKey())){
@@ -216,9 +222,12 @@ class Cls extends CuClass {
 			temp.mKind.addAll(ts.data_kc);
 			temp.mMutVariables = ts.data_tc;
 			HReturn re = iter.funBody.calculateType(temp);
+			System.out.println("b is " + re.b + re.tau.toString() + "data_t is " + ts.data_t.toString());
 			if (re.b == false || !re.tau.isSubtypeOf(ts.data_t)) {
+				System.out.println("return type doesn't match, b is " + re.b + re.tau.toString());
 				throw new NoSuchTypeException();
 			}
+			System.out.println("succeed " + iter.toString());
 		}
 		
 		//check every function has an implemention
@@ -312,7 +321,7 @@ class Intf extends CuClass{
 		}
 		else if (superType instanceof VTypeInter) {
 			Helper.ToDo("Please check whether the parrentType is implmented correctly");
-			for (CuType t:superType.parentType){
+			for (CuType t: superType.parentType){
 				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 					//check signature if already exists

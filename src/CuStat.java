@@ -65,16 +65,18 @@ class ForStat extends CuStat{
 		System.out.println("in for stat, begin");
 		CuContext tcontext = new CuContext (context);
 		tcontext.mergeVariable();		
-    	//check whether e is an iterable of tao
+    	//check whether e is an iterable of tau
     	CuType eType = e.calculateType(tcontext);
  		Boolean flag = eType.isIterable();
     	if (flag != true) {
     		throw new NoSuchTypeException();
     	}
+    	eType.type = Helper.getTypeForIterable(eType.toString());
     	//var can't appear in mutable or immutable variables
     	if (context.inMutVar(this.var.toString()) || context.inVar(this.var.toString())) {
     		throw new NoSuchTypeException();
     	}
+    	System.out.println("etype is " + eType.toString());
     	CuType iter_type = eType.getArgument();
     	System.out.println("variable type is " + iter_type.id);
     	CuContext s_context = new CuContext(context);
@@ -158,7 +160,7 @@ class ReturnStat extends CuStat{
 		CuContext tcontext = new CuContext (context);
 		tcontext.mergeVariable();	
 		re.tau = e.calculateType(tcontext);
-		System.out.println("in return stat, end");
+		System.out.println("in return stat, exp is " + e.toString() + " end");
 		return re;
 	}
 }
