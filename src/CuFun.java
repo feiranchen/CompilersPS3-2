@@ -29,16 +29,4 @@ class Function extends CuFun {
 		return null;
 	}
 	
-//	@Override public void add(CuVvc v, CuTypeScheme ts) {
-//		this.v.add(v);
-//		this.ts.add(ts);
-//	}
-//	
-//	@Override public void add(CuVvc v, CuTypeScheme ts, CuStat s) {
-//		this.v.add(v);
-//		this.ts.add(ts);
-//		this.funBody=s;
-//	}
-	
-	
 }

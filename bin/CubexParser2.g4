@@ -114,7 +114,7 @@ intf returns [CuClass c] // add to classList? add to funlist
   RBRACE)?;
 
 cls returns [CuClass c] 
-: CLASS CLSINTF pk=kindcontext pt=typecontext {$c = new Cls($CLSINTF.text, $pk.kc, $pt.tc); } 
+: CLASS CLSINTF pk=kindcontext pt=typecontext {$c = new Cls($CLSINTF.text, $pk.kc, (LinkedHashMap)($pt.tc)); } 
   (EXTENDS t=type {$c.addSuper($t.t);} 
      LBRACE (s=stat {$c.add($s.s);})* 
        (SUPER LPAREN es=exprs RPAREN SEMICOLON {$c.add($es.cu);})? 

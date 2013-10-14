@@ -9,6 +9,7 @@ all:
 	jar cvfm TypeCheck.jar MANIFEST.MF *.class *.java *.g4
 
 test:
+	chmod +x TypeCheck.jar
 	bash TestCases TypeCheck.jar
 
 clean:

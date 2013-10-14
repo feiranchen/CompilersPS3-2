@@ -62,82 +62,105 @@ class Cls extends CuClass {
 	}
 	
 	@Override public CuClass calculateType(CuContext context) throws NoSuchTypeException { 
-		//we don't want to modify context
-		CuContext cur_context = new CuContext(context);
-		cur_context.mKind = super.kindCtxt;
+		//keep track of different versions of context
+		CuContext snd_context = new CuContext(context);
+		snd_context.mKind = kindCtxt;
+		
 		//we need to type check tau 
-		CuType tau_hat = super.superType.calculateType(cur_context);
+		CuType tau_hat = super.superType.calculateType(snd_context);
+		//interface can only implement interface
+		if(isInterface()){
+			//fail if superclass is not interface
+			if(!tau_hat.equals(CuType.top))
+				throw new NoSuchTypeException();
+		}
+		
+		snd_context.up
 		
 		if (!(superType instanceof Top) && !(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
 			throw new NoSuchTypeException();
 		}
-		//make a copy of current function list, because we only need to type check these functions
+		
+		//make a local copy of current function list, because we only need to type check these functions
 		Map<String, CuFun> funList_cpy = new HashMap<String, CuFun>();
 		funList_cpy.putAll(funList);
 		
 		if (superType instanceof VClass){
-			Map<String, CuFun> superfunLst = cur_context.mClasses.get(superType.id).funList;
+			Map<String, CuFun> superfunLst = snd_context.mClasses.get(superType.id).funList;
 			for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 				//check signature if already exists
 				if (funList.containsKey(e.getKey())){
-					//check signature, but not here
-					//e.getValue().ts.calculateType(context);
-					//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
-					//check whether the 
-					////I don't think we should check here because you can not check two tyscheme equivalence with generic parames
-					if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
-						throw new NoSuchTypeException();
+					//check signature is the same as the overwritten method
+					e.getValue().ts.calculateType(context);
+					if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
+					////I don't think we should check here because you can not check 
+					////two tyscheme equivalence with generic parames
+						Helper.ToDo("edit equals for typeshememe instead.");
+						if (!e.getValue().ts.sameAs(e.getValue().ts, snd_context)){
+							throw new NoSuchTypeException(); }
 					}
 					if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
 						funList.get(e.getKey()).funBody = e.getValue().funBody;
 					}
-					//in classes, every function declared has a body
+				//in classes, every function declared has a body
 				}else{//add method if it doesn't already exist
 					super.mFunctions.put(e.getKey(),e.getValue().ts);
 					super.funList.put(e.getKey(), e.getValue());
 				}
 			}
+
+			//update the outside context at the end.
 		}
 		else if (superType instanceof VTypeInter) {
-			Helper.ToDo("Please check whether the parrentType is implmented correctly");
 			for (CuType t:superType.parentType){
-				Map<String, CuFun> superfunLst= cur_context.mClasses.get(t.id).funList;
+				Map<String, CuFun> superfunLst= snd_context.mClasses.get(t.id).funList;
 				for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
-					//check signature if already exists
+					//if this method already exists
 					if (funList.containsKey(e.getKey())){
-						//check signature, but not here
-						//e.getValue().ts.calculateType(context);
-						//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
+						//check signature valid
+						e.getValue().ts.calculateType(context);
+						if (!e.getValue().ts.equals(context.mFunctions.get(e.getKey()))){
 						//check whether the 
-						//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
-						if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
-							throw new NoSuchTypeException();
+							if (!e.getValue().ts.sameAs(e.getValue().ts, snd_context)){
+								throw new NoSuchTypeException();
+							}
+							//use the first method implementation
+							if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
+								funList.get(e.getKey()).funBody = e.getValue().funBody;
+							}
+						//the method has not implemented the method declared in the interface.
 						}
-						//use the first method implementation
-						if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
-							funList.get(e.getKey()).funBody = e.getValue().funBody;
+					}else{
+						//this is an super-interface, then there has to be an existing implementation
+						if (t.calculateType(context).equals(CuType.top)){//add method if it doesn't already exist
+							super.mFunctions.put(e.getKey(),e.getValue().ts);
+							super.funList.put(e.getKey(), e.getValue());
 						}
-					}else{//add method if it doesn't already exist
-						super.mFunctions.put(e.getKey(),e.getValue().ts);
-						super.funList.put(e.getKey(), e.getValue());
+						//if this is a super-class, fill in method body if there isn't one already
+						else if {
+						} 
 					}
 				}
 			}
+			//update the outside context at the end.
 		}
 		
+		
+		
+		
 		//here, we check all the function names, they should not appear in context's mfunctions
-		if (cur_context.mFunctions.containsKey(super.name)) {
+		if (snd_context.mFunctions.containsKey(super.name)) {
 			throw new NoSuchTypeException();
 		}
 		
 		for (String method_name : super.mFunctions.keySet()) {
-			if (cur_context.mFunctions.containsKey(method_name)) {
+			if (snd_context.mFunctions.containsKey(method_name)) {
 				throw new NoSuchTypeException();
 			}
 		}
 		
 		context.updateClass(name, this);
-		cur_context.updateClass(name, this);
+		snd_context.updateClass(name, this);
 		//also need to update the function context, delta prime in figure 10
 		List<CuType> cur_types = new ArrayList<CuType>();
 		for (String str : super.kindCtxt) {
@@ -145,26 +168,26 @@ class Cls extends CuClass {
 		}
 		CuTypeScheme temp_ts = new TypeScheme(super.kindCtxt, this.fieldTypes , new VClass(super.name, cur_types));
 		context.updateFunction(super.name, temp_ts);
-		cur_context.updateFunction(super.name, temp_ts);
+		snd_context.updateFunction(super.name, temp_ts);
 
 			
 		//now type check each typescheme
 		for (CuFun iter : funList_cpy.values()) {
-			iter.ts.calculateType(cur_context);
+			iter.ts.calculateType(snd_context);
 		}
 			
 		//type checks gamma hat
 		for (CuType ct : this.fieldTypes.values()) {
-			ct.calculateType(cur_context);
+			ct.calculateType(snd_context);
 		}
-		cur_context.mMutVariables = this.fieldTypes;
-		for (CuStat s :classStatement) {s.calculateType(cur_context);}
+		snd_context.mMutVariables = this.fieldTypes;
+		for (CuStat s :classStatement) {s.calculateType(snd_context);}
 			
-		cur_context.mergeVariable();
+		snd_context.mergeVariable();
 			
 		if (!tau_hat.id.equals(CuVvc.TOP)) {
 			CuExpr temp_expr = new VcExp(tau_hat.id, new ArrayList<CuType>(), this.superArg);
-			CuType retype = temp_expr.calculateType(cur_context);
+			CuType retype = temp_expr.calculateType(snd_context);
 			if (!retype.equals(super.superType)) {
 				throw new NoSuchTypeException();
 			}
@@ -186,10 +209,10 @@ class Cls extends CuClass {
 				throw new NoSuchTypeException();}
 		*/
 		
-		cur_context.mFunctions.putAll(mFunctions);
+		snd_context.mFunctions.putAll(mFunctions);
 		for (CuFun iter : funList_cpy.values()) {
 			CuTypeScheme ts = iter.ts;
-			CuContext temp = new CuContext(cur_context);
+			CuContext temp = new CuContext(snd_context);
 			temp.mKind.addAll(ts.data_kc);
 			temp.mMutVariables = ts.data_tc;
 			HReturn re = iter.funBody.calculateType(temp);

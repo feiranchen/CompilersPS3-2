@@ -171,7 +171,6 @@ class VClass extends CuType {
 	}
 }
 
-
 class VTypeInter extends CuType {
 	List<CuType> parents = new ArrayList<CuType>();
 	public VTypeInter(CuType t1){
