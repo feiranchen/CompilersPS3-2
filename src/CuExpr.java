@@ -486,6 +486,11 @@ class VcExp extends CuExpr {
                 throw new NoSuchTypeException();
         }
         System.out.println("in VcExp, end");
+        if(cur_ts.data_t.isClassOrInterface())
+        {
+        	if(!cur_ts.data_t.parentType.contains(context.mClasses.get(cur_ts.data_t.id).superType))
+        		cur_ts.data_t.parentType.add(context.mClasses.get(cur_ts.data_t.id).superType);
+        }
         return cur_ts.data_t;
 	}
 }
@@ -522,8 +527,8 @@ class VvExp extends CuExpr{
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType cur_type : cur_ts.data_tc.values()) {
-        	if(cur_type.id.equals("Iterable"))
-        		cur_type.type = Helper.getTypeForIterable(cur_type.text);
+        	/*if(cur_type.id.equals("Iterable"))
+        		cur_type.type = Helper.getTypeForIterable(cur_type.text);*/
             tList.add(cur_type);
         }
         for (int i = 0; i < es.size(); i++) {

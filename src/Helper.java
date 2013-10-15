@@ -59,7 +59,7 @@ public class Helper {
 	protected static void ToDo(String comment){
 	}
 	
-	protected static CuType getTypeForIterable(String s){
+	/*protected static CuType getTypeForIterable(String s){
 		CuType type;
 		Pattern p = Pattern.compile("[A-Za-z ]*< ?([A-Za-z0-9]*)");		//Iterable  < Integer  < >  >
 		Matcher m = p.matcher(s);
@@ -70,5 +70,5 @@ public class Helper {
 		else
 			type = new VClass(m.group(1), new ArrayList<CuType>());
 		return type;
-	}
+	}*/
 }

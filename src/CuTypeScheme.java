@@ -22,8 +22,8 @@ class TypeScheme extends CuTypeScheme {
 		super.data_kc=kc;
 		super.data_tc=tc;
 		super.data_t=t;
-		if(super.data_t.id.equals("Iterable"))
-			super.data_t.type = Helper.getTypeForIterable(super.data_t.text);
+		/*if(super.data_t.id.equals("Iterable"))
+			super.data_t.type = Helper.getTypeForIterable(super.data_t.text);*/
 		super.text=Helper.printList("<", data_kc, ">", ",")+" "+Helper.printMap("(", data_tc, ")", ",")+" : "+t.toString();
 	}
 	
@@ -44,8 +44,8 @@ class TypeScheme extends CuTypeScheme {
 		CuContext original_context = new CuContext(context);
 		context.mKind.addAll(data_kc);
 		//tc is a LinkedHashMap
-		ArrayList<CuType> this_types = (ArrayList<CuType>) super.data_tc.values();
-		ArrayList<CuType> that_types = (ArrayList<CuType>) super.data_tc.values();
+		ArrayList<CuType> this_types = new ArrayList<CuType> (super.data_tc.values());
+		ArrayList<CuType> that_types = new ArrayList<CuType> (super.data_tc.values());
 		for (int i=0; i<this_types.size(); i++) {
 			if (!this_types.get(i).equals(that_types.get(i))) {
 				//restore original context
