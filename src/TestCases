@@ -46,13 +46,14 @@ for IN in `find \`dirname $1\`| grep '\.in' | sed 's/ /\\ /g' | sort`; do
     echo "Time: $TIME"
     if [ -f $OUT ]; then
             DIFF=`diff $OUT $MYOUT`
-            if [ -z "$DIFF" ]; then
-                echo "Exit: OK!"
-                echo $MYOUT
-            else
-                echo "Exit: Bad! -> Diff:"
-                diff $OUT $MYOUT
-            fi
+            #if [ -z "$DIFF" ]; then
+            #    echo "Exit: OK!"
+            echo "Printing result :"
+            echo $MYOUT
+            #else
+            #    echo "Exit: Bad! -> Diff:"
+            #    diff $OUT $MYOUT
+            #fi
     fi
     echo "============================================================"
 done

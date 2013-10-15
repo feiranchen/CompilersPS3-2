@@ -42,6 +42,10 @@ public class CuContext {
 	public CuType getMutVariable(String name) { return mMutVariables.get(name); }
 	public CuTypeScheme getFunction(String name) { return mFunctions.get(name); }
 	public void updateType(String name, CuType value){ mVariables.put(name, value);}
+	public void updateTypeMap(Map<String,CuType> map){ 
+		for (Map.Entry<String, CuType>e : map.entrySet()){
+		mVariables.put(e.getKey(), e.getValue());}
+	}
 	public void updateMutType(String name, CuType value){ mMutVariables.put(name, value);}
 	public void updateFunction(String name, CuTypeScheme value){ mFunctions.put(name, value);}
 	public void updateClass(String name, CuClass value){ this.mClasses.put(name, value);}
