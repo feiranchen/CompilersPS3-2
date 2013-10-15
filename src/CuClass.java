@@ -78,6 +78,7 @@ class Cls extends CuClass {
 	@Override
 	public void add(String v, CuTypeScheme ts, CuStat s) {
 		super.funList.put(v, new Function(v, ts, s));
+		super.mFunctions.put(v, ts);
 	}
 
 	@Override
@@ -109,8 +110,9 @@ class Cls extends CuClass {
 		CuType constr_classType = new VClass(name, constr_gene);
 		TypeScheme ts_contructor = new TypeScheme(new ArrayList<String>(),
 				fieldTypes, constr_classType);
-		funList.put(name,new Function(name, ts_contructor, null));
+		funList.put(name,new Function(name, ts_contructor, new EmptyBody()));
 		snd_context.updateFunction(name, ts_contructor);
+		context.updateFunction(name, ts_contructor);
 
 		// Figure 10 rule 2, line 3
 		for (CuFun iter : funList.values()) {
@@ -284,6 +286,7 @@ class Intf extends CuClass {
 	@Override
 	public void add(String v, CuTypeScheme ts, CuStat s) {
 		super.funList.put(v, new Function(v, ts, s));
+		super.mFunctions.put(v, ts);
 	}
 
 	@Override

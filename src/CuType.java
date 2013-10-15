@@ -267,8 +267,12 @@ class VTypeInter extends CuType {
 		HashSet<String> vAll = new HashSet<String>(); 
 		for(int i = 0; i < parentType.size(); i++) {
 			CuType t = parentType.get(i);
+			if (!t.isTop() && (!t.isClassOrInterface())) {
+				throw new NoSuchTypeException();
+			}
+			CuType tt = t.calculateType(context);
 			// A & B & C..., only the first could be a class
-			if ((i > 0) && !t.calculateType(context).isTop()) throw new NoSuchTypeException();
+			if ((i > 0) && !tt.isTop()) throw new NoSuchTypeException();
 			// all parents are distinct except top
 			List<CuType> temp = t.parentType;
 			temp.remove(CuType.top);
