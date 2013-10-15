@@ -72,16 +72,12 @@ class Cls extends CuClass {
 		
 		//Figure 10 rule 2, line 2
 		snd_context.updateClass(name,this);
-		LinkedHashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
-		for (Map.Entry<String, CuType> e : fieldTypes.entrySet()){
-			arg.put(e.getKey(), e.getValue());
-		}
 		List<CuType> constr_gene=new ArrayList<CuType>();
 		for (String s: kindCtxt){
 			constr_gene.add(new VTypePara(s));
 		}
 		CuType constr_classType=new VClass(name, constr_gene);
-		TypeScheme ts_contructor = new TypeScheme(new ArrayList<String>(), arg, constr_classType);
+		TypeScheme ts_contructor = new TypeScheme(new ArrayList<String>(), fieldTypes, constr_classType);
 		snd_context.updateFunction(name, ts_contructor);
 		
 		//Figure 10 rule 2, line 3
@@ -89,6 +85,33 @@ class Cls extends CuClass {
 			iter.ts.calculateType(snd_context);
 		}
 		
+		//Figure 10 rule 2, line 4
+
+		for (CuType ct : this.fieldTypes.values()) {
+			ct.calculateType(snd_context);
+		}
+		snd_context.mMutVariables = this.fieldTypes;
+		for (CuStat s: classStatement){
+			s.calculateType(snd_context);
+		}
+		snd_context.mergeVariable();
+		
+		//Figure 10 rule 2, line 5
+		if (!tau_hat.id.equals(CuVvc.TOP)) {
+			CuExpr temp_expr = new VcExp(tau_hat.id, new ArrayList<CuType>(), this.superArg);
+			CuType retype = temp_expr.calculateType(snd_context);
+			if (!retype.equals(super.superType)) {
+				throw new NoSuchTypeException();
+			}
+			snd_context.mergeVariable();
+		}
+
+
+		//finally update global context here before we deal with the methods.
+		context.mClasses=snd_context.mClasses;
+		context.mFunctions=snd_context.mFunctions;
+		
+		//Figure 10 rule 2, line 6
 		if (!(superType instanceof Top) 
 				&& !(superType instanceof VClass) 
 				&& !(superType instanceof VTypeInter)) {
@@ -143,62 +166,16 @@ class Cls extends CuClass {
 					//add method if it doesn't already exist
 					else{
 						snd_context.mFunctions.put(e.getKey(),e.getValue().ts);
-						super.funList.put(e.getKey(), e.getValue());
+						funList.put(e.getKey(), e.getValue());
 					}
 				}
 			}
 		}
 
-		
-		
-		
-		
-		//here, we check all the function names, they should not appear in context's mfunctions
-		if (snd_context.mFunctions.containsKey(super.name)) {
-			throw new NoSuchTypeException();
-		}
-		
-		for (String method_name : super.mFunctions.keySet()) {
-			if (snd_context.mFunctions.containsKey(method_name)) {
-				throw new NoSuchTypeException();
-			}
-		}
-		
-		context.updateClass(name, this);
-		snd_context.updateClass(name, this);
-		//also need to update the function context, delta prime in figure 10
-		List<CuType> cur_types = new ArrayList<CuType>();
-		for (String str : super.kindCtxt) {
-			cur_types.add(new VTypePara(str));
-		}
-		CuTypeScheme temp_ts = new TypeScheme(super.kindCtxt, this.fieldTypes , new VClass(super.name, cur_types));
-		context.updateFunction(super.name, temp_ts);
-		snd_context.updateFunction(super.name, temp_ts);
 
-			
-		//now type check each typescheme
-		for (CuFun iter : funList_cpy.values()) {
-			iter.ts.calculateType(snd_context);
-		}
-			
-		//type checks gamma hat
-		for (CuType ct : this.fieldTypes.values()) {
-			ct.calculateType(snd_context);
-		}
-		snd_context.mMutVariables = this.fieldTypes;
-		for (CuStat s :classStatement) {s.calculateType(snd_context);}
-			
-		snd_context.mergeVariable();
-			
-		if (!tau_hat.id.equals(CuVvc.TOP)) {
-			CuExpr temp_expr = new VcExp(tau_hat.id, new ArrayList<CuType>(), this.superArg);
-			CuType retype = temp_expr.calculateType(snd_context);
-			if (!retype.equals(super.superType)) {
-				throw new NoSuchTypeException();
-			}
-		}
-			
-		for (CuFun iter : funList_cpy.values()) {
+		//now type check each typescheme 
+		//Figure 10 rule 2 line 7
+		for (CuFun iter : funList.values()) {
 			List<String> theta_bar = iter.ts.data_kc;
 			for (String str_iter : theta_bar) {
 				if (super.kindCtxt.contains(str_iter)) {
@@ -206,35 +183,37 @@ class Cls extends CuClass {
 				}
 			}
 		}
-			
-		/* this should be s_hat instead of s
-		for (CuStat s :classStatement) {
-			if (!s.calculateType(context).b
-					||s.calculateType(context).tau.isSubtypeOf(s.calculateType(context).tau)) 
-				throw new NoSuchTypeException();}
-		*/
 		
-		snd_context.mFunctions.putAll(mFunctions);
-		for (CuFun iter : funList_cpy.values()) {
-			CuTypeScheme ts = iter.ts;
-			CuContext temp = new CuContext(snd_context);
-			temp.mKind.addAll(ts.data_kc);
-			temp.mMutVariables = ts.data_tc;
-			HReturn re = iter.funBody.calculateType(temp);
-			System.out.println("b is " + re.b + re.tau.toString() + "data_t is " + ts.data_t.toString());
-			if (re.b == false || !re.tau.isSubtypeOf(ts.data_t)) {
-				System.out.println("return type doesn't match, b is " + re.b + re.tau.toString());
-				throw new NoSuchTypeException();
-			}
-			System.out.println("succeed " + iter.toString());
+		//here, we check all the function names, they should not appear in context's mfunctions
+		if (snd_context.mFunctions.containsKey(super.name)) {
+			throw new NoSuchTypeException();
 		}
-		
-		//check every function has an implemention
-		for (CuFun iter_fun : super.funList.values()) {
-			if (iter_fun.funBody == null || iter_fun.funBody instanceof EmptyBody) {
+		for (String method_name : super.mFunctions.keySet()) {
+			if (snd_context.mFunctions.containsKey(method_name)) {
 				throw new NoSuchTypeException();
 			}
 		}
+
+		//Figure 10 rule 2 line 8
+		for (CuFun iter : funList.values()) {
+			iter.ts.calculateType(snd_context);
+			snd_context.mFunctions.put(iter.v,iter.ts);
+			//only check those that have function body
+			if (!(iter.funBody instanceof EmptyBody)) {
+				CuTypeScheme ts = iter.ts;
+				CuContext tempContext = new CuContext(snd_context);
+				tempContext.mKind.addAll(ts.data_kc);
+				tempContext.mMutVariables = ts.data_tc;
+				HReturn re = iter.funBody.calculateType(tempContext);
+				if (re.b == false || !re.tau.isSubtypeOf(ts.data_t)) {
+					throw new NoSuchTypeException();
+				}
+			}
+		}
+		
+		//Figure 10 rule 2 line 8
+		//funlist field in each Cls gaurentees that.
+
 		return this;
 	}
 	
@@ -352,8 +331,6 @@ class Intf extends CuClass{
 		//now type check each typescheme 
 		//Figure 10 rule 1 line 5
 		for (CuFun iter : funList.values()) {
-			iter.ts.calculateType(snd_context);
-			snd_context.mFunctions.put(iter.v,iter.ts);
 			List<String> theta_bar = iter.ts.data_kc;
 			for (String str_iter : theta_bar) {
 				if (snd_context.mKind.contains(str_iter)) {
@@ -362,7 +339,11 @@ class Intf extends CuClass{
 			}
 		}
 		
+
+		//Figure 10 rule 1 line 6
 		for (CuFun iter : funList.values()) {
+			iter.ts.calculateType(snd_context);
+			snd_context.mFunctions.put(iter.v,iter.ts);
 			//only check those that have function body
 			if (!(iter.funBody instanceof EmptyBody)) {
 				CuTypeScheme ts = iter.ts;
