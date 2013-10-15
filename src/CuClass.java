@@ -78,6 +78,7 @@ class Cls extends CuClass {
 	@Override
 	public void add(String v, CuTypeScheme ts, CuStat s) {
 		super.funList.put(v, new Function(v, ts, s));
+		super.mFunctions.put(v, ts);
 	}
 
 	@Override
@@ -109,7 +110,9 @@ class Cls extends CuClass {
 		CuType constr_classType = new VClass(name, constr_gene);
 		TypeScheme ts_contructor = new TypeScheme(new ArrayList<String>(),
 				fieldTypes, constr_classType);
+		funList.put(name,new Function(name, ts_contructor, new EmptyBody()));
 		snd_context.updateFunction(name, ts_contructor);
+		context.updateFunction(name, ts_contructor);
 
 		// Figure 10 rule 2, line 3
 		for (CuFun iter : funList.values()) {
@@ -140,7 +143,6 @@ class Cls extends CuClass {
 
 		// finally update global context here before we deal with the methods.
 		context.mClasses = snd_context.mClasses;
-		context.mFunctions = snd_context.mFunctions;
 
 		// Figure 10 rule 2, line 6
 		if (!(superType instanceof Top) && !(superType instanceof VClass)
@@ -210,7 +212,7 @@ class Cls extends CuClass {
 		// now type check each typescheme
 		// Figure 10 rule 2 line 7
 		for (CuFun iter : funList.values()) {
-			if (snd_context.mFunctions.containsKey(iter.v)) {
+			if (snd_context.mFunctions.containsKey(iter.v) && !iter.v.equals(name)) {
 				throw new NoSuchTypeException();
 			}
 			List<String> theta_bar = iter.ts.data_kc;
@@ -224,7 +226,6 @@ class Cls extends CuClass {
 		// Figure 10 rule 2 line 8
 		for (CuFun iter : funList.values()) {
 			iter.ts.calculateType(snd_context);
-			snd_context.mFunctions.put(iter.v, iter.ts);
 			// only check those that have function body
 			if (!(iter.funBody instanceof EmptyBody)) {
 				CuTypeScheme ts = iter.ts;
@@ -286,6 +287,7 @@ class Intf extends CuClass {
 	@Override
 	public void add(String v, CuTypeScheme ts, CuStat s) {
 		super.funList.put(v, new Function(v, ts, s));
+		super.mFunctions.put(v, ts);
 	}
 
 	@Override
@@ -376,7 +378,6 @@ class Intf extends CuClass {
 		// Figure 10 rule 1 line 6
 		for (CuFun iter : funList.values()) {
 			iter.ts.calculateType(snd_context);
-			snd_context.mFunctions.put(iter.v, iter.ts);
 			// only check those that have function body
 			if (!(iter.funBody instanceof EmptyBody)) {
 				CuTypeScheme ts = iter.ts;
