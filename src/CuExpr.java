@@ -127,7 +127,8 @@ class BrkExpr extends CuExpr {
 	@Override protected CuType calculateType(CuContext context) {
 		System.out.println("in bracket expression, start");
 		if (val == null || val.isEmpty()) return new Iter(CuType.bottom);
-		CuType t = val.get(0).getType(context);
+		CuExpr temp =val.get(0);
+		CuType t = temp.getType(context);
 		System.out.println("type id is " + t.id);
 		for (int i = 0; i+1 < val.size(); i++) {
 			t = CuType.commonParent(val.get(i).getType(context), val.get(i+1).getType(context));

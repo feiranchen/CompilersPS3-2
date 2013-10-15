@@ -10,12 +10,14 @@ public abstract class CuClass {
 	String name;
 	CuType superType = new Top();
 	List<String> kindCtxt = null;
+	HashMap<String, CuFun> funList = new HashMap<String, CuFun>();
 	//Bad naming. This is only for preset classes.
 	Map<String, CuTypeScheme> mFunctions = new HashMap<String, CuTypeScheme>();
-	// we probably don't need this since we are using CuFun
-	// List<String> implemented_methods = new ArrayList<String>();
-
-	HashMap<String, CuFun> funList = new HashMap<String, CuFun>();
+	
+	//just for Cls
+	Map<String, CuType> fieldTypes = new LinkedHashMap<String, CuType>();
+	List<CuStat> classStatement = new ArrayList<CuStat>();
+	
 
 	public void add(List<CuExpr> s) {
 	}
@@ -50,11 +52,6 @@ public abstract class CuClass {
 }
 
 class Cls extends CuClass {
-	Map<String, CuType> fieldTypes = new LinkedHashMap<String, CuType>();
-
-	// List<CuType> appliedTypePara=new ArrayList<CuType>();
-	List<CuStat> classStatement = new ArrayList<CuStat>();
-	// private static final Exception NoSuchTypeExpression() = null;
 
 	List<CuExpr> superArg;
 
@@ -144,20 +141,27 @@ class Cls extends CuClass {
 		// finally update global context here before we deal with the methods.
 		context.mClasses = snd_context.mClasses;
 
-		// Figure 10 rule 2, line 6
-		if (!(superType instanceof Top) && !(superType instanceof VClass)
-				&& !(superType instanceof VTypeInter)) {
-			throw new NoSuchTypeException();
-		}
 
 		// make a local copy of current function list, because we only need to
 		// type check these functions
 		// Map<String, CuFun> funList_cpy = new HashMap<String, CuFun>();
 		// funList_cpy.putAll(funList);
 
+		
+		// Figure 10 rule 2, line 6
+		if (!(superType instanceof Top) && !(superType instanceof VClass)
+				&& !(superType instanceof VTypeInter)) {
+			throw new NoSuchTypeException();
+		}
+
 		if (superType instanceof VClass) {
 			Map<String, CuFun> superfunLst = snd_context.mClasses.get(superType.id).funList;
 			for (Map.Entry<String, CuFun> e : superfunLst.entrySet()) {
+				//copy all the inherited fields from super class
+				//snd_context.updateTypeMap(snd_context.mClasses.get(superType.id).fieldTypes);
+				for (Map.Entry<String, CuType> entry : snd_context.mClasses.get(superType.id).fieldTypes.entrySet()){
+					snd_context.mVariables.put(entry.getKey(), entry.getValue());}
+				
 				// check signature if already exists
 				if (funList.containsKey(e.getKey())) {
 					e.getValue().ts.calculateType(snd_context);
@@ -166,9 +170,9 @@ class Cls extends CuClass {
 							snd_context)) {
 						throw new NoSuchTypeException();
 					}
+					
 					// if this method doesn't have an implementation, but super
-					// interface has an implementation,
-					// grab it
+					// interface has an implementation,grab it
 					if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
 						funList.get(e.getKey()).funBody = e.getValue().funBody;
 					}
@@ -180,6 +184,7 @@ class Cls extends CuClass {
 							&& (e.getValue().funBody instanceof EmptyBody))
 						throw new NoSuchTypeException();
 					funList.put(e.getKey(), e.getValue());
+					super.mFunctions.put(e.getKey(), e.getValue().ts);
 				}
 			}
 		} else if (superType instanceof VTypeInter) {
@@ -202,6 +207,7 @@ class Cls extends CuClass {
 					// add method if it doesn't already exist
 					else {
 						funList.put(e.getKey(), e.getValue());
+						super.mFunctions.put(e.getKey(), e.getValue().ts);
 					}
 				}
 			}
@@ -333,6 +339,7 @@ class Intf extends CuClass {
 				// add method if it doesn't already exist
 				else {
 					funList.put(e.getKey(), e.getValue());
+					super.mFunctions.put(e.getKey(), e.getValue().ts);
 				}
 			}
 		} else if (superType instanceof VTypeInter) {
@@ -355,6 +362,7 @@ class Intf extends CuClass {
 					// add method if it doesn't already exist
 					else {
 						super.funList.put(e.getKey(), e.getValue());
+						super.mFunctions.put(e.getKey(), e.getValue().ts);
 					}
 				}
 			}
