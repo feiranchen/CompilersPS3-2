@@ -110,7 +110,7 @@ class Cls extends CuClass {
 		CuType constr_classType = new VClass(name, constr_gene);
 		TypeScheme ts_contructor = new TypeScheme(new ArrayList<String>(),
 				fieldTypes, constr_classType);
-		funList.put(name,new Function(name, ts_contructor, new EmptyBody()));
+		//funList.put(name,new Function(name, ts_contructor, new EmptyBody()));
 		snd_context.updateFunction(name, ts_contructor);
 		context.updateFunction(name, ts_contructor);
 
@@ -156,8 +156,7 @@ class Cls extends CuClass {
 		// funList_cpy.putAll(funList);
 
 		if (superType instanceof VClass) {
-			Map<String, CuFun> superfunLst = snd_context.mClasses
-					.get(superType.id).funList;
+			Map<String, CuFun> superfunLst = snd_context.mClasses.get(superType.id).funList;
 			for (Map.Entry<String, CuFun> e : superfunLst.entrySet()) {
 				// check signature if already exists
 				if (funList.containsKey(e.getKey())) {
@@ -211,9 +210,11 @@ class Cls extends CuClass {
 		// now type check each typescheme
 		// Figure 10 rule 2 line 7
 		for (CuFun iter : funList.values()) {
+			//name hiding check
 			if (snd_context.mFunctions.containsKey(iter.v) && !iter.v.equals(name)) {
 				throw new NoSuchTypeException();
 			}
+			//actual rule line 7
 			List<String> theta_bar = iter.ts.data_kc;
 			for (String str_iter : theta_bar) {
 				if (super.kindCtxt.contains(str_iter)) {
