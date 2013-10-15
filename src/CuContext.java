@@ -38,7 +38,15 @@ public class CuContext {
 
 
 	public void updateKind(String name){ mKind.add(name); }
-	public CuType getVariable(String name) { return mVariables.get(name); }
+	public CuType getVariable(String name) { 
+		CuType temp = mVariables.get(name);
+		if (temp.isClassOrInterface())
+		{
+			if (!temp.parents.contains(mClasses.get(temp.id).superType))
+				temp.parentType.add(mClasses.get(temp.id).superType);
+		}
+		return temp;
+	}
 	public CuType getMutVariable(String name) { return mMutVariables.get(name); }
 	public CuTypeScheme getFunction(String name) { return mFunctions.get(name); }
 	public void updateType(String name, CuType value){ mVariables.put(name, value);}
@@ -70,7 +78,10 @@ public class CuContext {
     		if (context.inMutVar(key)) {
 	    		CuType t1 = this.getMutVariable(key);
 	    		CuType t2 = context.getMutVariable(key);
+	    		System.out.println("t1 is " + t1.id + " t2 is " + t2.id);
+	    		System.out.println("t1 type is is " + t1.type.id + " t2 type is " + t2.type.id);
 	    		CuType tCom = CuType.commonParent(t1, t2);
+	    		System.out.println("tCom is " + tCom);
 	    		new_mMutVariables.put(key, tCom);
     		}
     	}

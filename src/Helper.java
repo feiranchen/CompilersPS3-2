@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.*;
 
@@ -40,6 +41,16 @@ public class Helper {
 		}
 		return s;
 	}
+	protected static <T> boolean equals (Set<T> x, Set<T> y) {
+		for (T t1 : x) {
+			boolean t1E = false;
+			for (T t2 : y) {
+				if (!t1E && t1.equals(t2))  t1E = true;
+			}
+			if (!t1E) return false;
+		}
+		return x.size()==y.size();
+	}
 	
 	protected static void P(String s) {
 		System.out.println(s);
@@ -48,7 +59,7 @@ public class Helper {
 	protected static void ToDo(String comment){
 	}
 	
-	protected static CuType getTypeForIterable(String s){
+	/*protected static CuType getTypeForIterable(String s){
 		CuType type;
 		Pattern p = Pattern.compile("[A-Za-z ]*< ?([A-Za-z0-9]*)");		//Iterable  < Integer  < >  >
 		Matcher m = p.matcher(s);
@@ -59,5 +70,5 @@ public class Helper {
 		else
 			type = new VClass(m.group(1), new ArrayList<CuType>());
 		return type;
-	}
+	}*/
 }
