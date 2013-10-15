@@ -272,10 +272,12 @@ class VTypeInter extends CuType {
 			// all parents are distinct except top
 			List<CuType> temp = t.parentType;
 			temp.remove(CuType.top);
-			if(!pAll.addAll(temp)) throw new NoSuchTypeException();
+			if (temp.size() > 0)	
+				if(!pAll.addAll(temp)) throw new NoSuchTypeException();
 			// all method names are distinct
 			Set<String> temp2 = context.mClasses.get(t.id).mFunctions.keySet();
-			if(!vAll.addAll(temp2)) throw new NoSuchTypeException();
+			if(temp2.size()>0)
+				if(!vAll.addAll(temp2)) throw new NoSuchTypeException();
 		}
 		return parentType.get(0).calculateType(context);
 	}
