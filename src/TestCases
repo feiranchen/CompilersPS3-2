@@ -41,7 +41,9 @@ for IN in `find \`dirname $1\`| grep '\.in' | sed 's/ /\\ /g' | sort`; do
     OUT=`echo $IN | sed 's/in$/out/'`
     MYOUT=`echo $OUT | sed 's/out$/my.out/'`
     TIME=`(time ./$1 < $IN > $MYOUT) 2>&1 | grep real | sed 's/real //'`
- 
+    #execution
+    java -jar $1 $IN > $MYOUT
+
     echo "**** `echo $IN | sed 's/^[0-9a-zA-Z\/.]*\/\([0-9a-zA-Z._-]*\).in$/\1/'` ****"
     echo "Time: $TIME"
     if [ -f $OUT ]; then
@@ -49,12 +51,14 @@ for IN in `find \`dirname $1\`| grep '\.in' | sed 's/ /\\ /g' | sort`; do
             #if [ -z "$DIFF" ]; then
             #    echo "Exit: OK!"
             echo "Printing result :"
-            echo $MYOUT
+            cat $MYOUT
+            printf "\n\nEXPECTED OUTPUT:"
+            cat $OUT
             #else
             #    echo "Exit: Bad! -> Diff:"
             #    diff $OUT $MYOUT
             #fi
     fi
-    echo "============================================================"
+    printf "\n============================================================"
 done
 exit 0

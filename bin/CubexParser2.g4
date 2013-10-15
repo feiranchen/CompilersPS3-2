@@ -36,8 +36,8 @@ type returns [CuType t]
 : v = TPARA {$t = new VTypePara($v.text);}
 | THING {$t = new Top();}
 | NOTHING {$t = new Bottom();}
-| CLSINTF p=paratype {$t = new VClass($CLSINTF.text, $p.pt);}
-| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);};
+| CLSINTF p=paratype {$t = ($CLSINTF.text.equals("Iterable"))? new Iter($p.pt) : new VClass($CLSINTF.text, $p.pt);}
+| l=type AMPERSAND r=type {$t = new VTypeInter($l.t); $t.add($r.t);} (AMPERSAND r1=type {$t.add($r1.t);})*;
 
 typescheme returns [CuTypeScheme ts]
 : kc=kindcontext tc=typecontext COLON t=type {$ts = new TypeScheme($kc.kc, $tc.tc, $t.t);};
@@ -108,18 +108,18 @@ funBody returns [CuStat body]
 
 intf returns [CuClass c] // add to classList? add to funlist 
 : INTERFACE CLSINTF p=kindcontext {$c = new Intf($CLSINTF.text, $p.kc); } 
-  (EXTENDS t=type {$c.addSuper($t.t);} 
+  (EXTENDS t=type {$c.addSuper($t.t);})?
   LBRACE (FUN VAR ts=typescheme f=funBody 
             {$c.add($VAR.text, $ts.ts, $f.body); })* 
-  RBRACE)?;
+  RBRACE;
 
 cls returns [CuClass c] 
 : CLASS CLSINTF pk=kindcontext pt=typecontext {$c = new Cls($CLSINTF.text, $pk.kc, (LinkedHashMap)($pt.tc)); } 
-  (EXTENDS t=type {$c.addSuper($t.t);} 
+  (EXTENDS t=type {$c.addSuper($t.t);})?
      LBRACE (s=stat {$c.add($s.s);})* 
-       (SUPER LPAREN es=exprs RPAREN SEMICOLON {$c.add($es.cu);})? 
-       (FUN VAR ts=typescheme f=funBody {$c.add($VAR.text, $ts.ts, $f.body); })* 
-     RBRACE)?;
+       (SUPER LPAREN es=exprs RPAREN SEMICOLON {$c.add($es.cu); System.out.println("parsed super");})? 
+       (FUN VAR ts=typescheme f=funBody {$c.add($VAR.text, $ts.ts, $f.body);  System.out.println("in class, parsed a function");})* 
+     RBRACE;
 
 program returns [CuProgr p]
 : {$p = new FullPrg(); } (pr = progr {$p.add_prg($pr.p);})* s=stat {$p.add_lastStat($s.s);};
@@ -128,7 +128,7 @@ progr returns [CuProgr p]
 : s=stat {$p = new StatPrg($s.s); }
 | FUN v=vv ts=typescheme s=stat { System.out.println("I parsed fun"); $p = new FunPrg($v.v, $ts.ts, $s.s); }
 | i=intf {$p = new ClassPrg($i.c);}
-| c=cls {$p = new ClassPrg($c.c);};
+| c=cls {$p = new ClassPrg($c.c); System.out.println("I parsed class"); };
 
 //top returns [CuTop cu]
 //: p=program EOF {$cu = new Top($p.p);};
