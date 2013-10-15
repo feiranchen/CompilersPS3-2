@@ -59,7 +59,7 @@ COMMENTS : '`'(COMMENTS | .)*? '\'' -> skip;
 COMMENTS_POND : '#'~[\r\n]*?[\r\n] -> skip;
 SPACE : [ \t\r\n]+ -> skip;
 
-ERROR : .+? {System.out.println("lexer error"); System.exit(-1);};
+ERROR : .+? {System.out.println("reject"); System.exit(-1);};
 
 
 
