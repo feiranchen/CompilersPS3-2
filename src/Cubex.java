@@ -27,9 +27,9 @@ public class Cubex {
 		try {
 			parser.program().p.calculateType(context);
 		} catch (Exception e) {
-			System.out.println("reject");
+			System.out.print("reject");
 			System.exit(-2);
 		}
-		System.out.println("accept");
+		System.out.print("accept");
 	}
 }
